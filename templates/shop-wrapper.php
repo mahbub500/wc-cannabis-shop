@@ -13,6 +13,11 @@
             <button class="wccs-search-clear" aria-label="Clear search">✕</button>
         </div>
 
+        <!-- Clear Filters (above categories) -->
+        <div class="wccs-filter-group">
+            <button class="wccs-clear-filters" id="wccs-clear-filters-top">Clear</button>
+        </div>
+
         <!-- Category Icons -->
         <div class="wccs-category-icons">
             <?php foreach ( $cats as $cat ) : ?>

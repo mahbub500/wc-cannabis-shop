@@ -202,27 +202,34 @@
 
     /* ---- Clear All Filters ---- */
 
+    function resetAllFilters() {
+        state.category = '';
+        state.strain   = '';
+        state.search   = '';
+        state.sale_only = false;
+        state.price    = [];
+
+        searchInput.value = '';
+        searchClear.classList.remove( 'visible' );
+
+        shop.querySelectorAll( '.wccs-cat-icon' ).forEach( b => b.classList.remove( 'active' ) );
+        shop.querySelectorAll( '.wccs-strain-btn' ).forEach( b => b.classList.remove( 'active' ) );
+        shop.querySelectorAll( '.wccs-price-checkbox input' ).forEach( cb => cb.checked = false );
+
+        if ( saleCheckbox ) saleCheckbox.checked = false;
+
+        resetPage();
+        fetchProducts();
+    }
+
     const clearAllBtn = shop.querySelector( '#wccs-clear-all' );
     if ( clearAllBtn ) {
-        clearAllBtn.addEventListener( 'click', () => {
-            state.category = '';
-            state.strain   = '';
-            state.search   = '';
-            state.sale_only = false;
-            state.price    = [];
+        clearAllBtn.addEventListener( 'click', resetAllFilters );
+    }
 
-            searchInput.value = '';
-            searchClear.classList.remove( 'visible' );
-
-            shop.querySelectorAll( '.wccs-cat-icon' ).forEach( b => b.classList.remove( 'active' ) );
-            shop.querySelectorAll( '.wccs-strain-btn' ).forEach( b => b.classList.remove( 'active' ) );
-            shop.querySelectorAll( '.wccs-price-checkbox input' ).forEach( cb => cb.checked = false );
-
-            if ( saleCheckbox ) saleCheckbox.checked = false;
-
-            resetPage();
-            fetchProducts();
-        } );
+    const clearFiltersTop = shop.querySelector( '#wccs-clear-filters-top' );
+    if ( clearFiltersTop ) {
+        clearFiltersTop.addEventListener( 'click', resetAllFilters );
     }
 
     /* ---- Add to cart (AJAX) ---- */
