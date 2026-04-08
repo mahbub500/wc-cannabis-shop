@@ -173,7 +173,7 @@
             action        : 'woocommerce_add_to_cart',
             product_id    : btn.dataset.productId,
             quantity      : 1,
-            add-to-cart   : btn.dataset.productId,
+            'add-to-cart' : btn.dataset.productId,
         } );
 
         try {
