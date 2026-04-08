@@ -1,0 +1,47 @@
+<?php
+defined( 'ABSPATH' ) || exit;
+/** @var WC_Product $product */
+
+$cats        = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
+$strain_attr = $product->get_attribute( 'strain-type' );
+$strain_map  = [
+    'indica'  => '#9b59b6',
+    'sativa'  => '#3498db',
+    'hybrid'  => '#e67e22',
+    'cbd'     => '#27ae60',
+];
+$strain_slug = strtolower( $strain_attr );
+$badge_color = $strain_map[ $strain_slug ] ?? '#888';
+?>
+<div class="wccs-product-card" 
+     data-cat="<?php echo esc_attr( implode( ',', wp_list_pluck( wp_get_post_terms( $product->get_id(), 'product_cat' ), 'slug' ) ) ); ?>"
+     data-strain="<?php echo esc_attr( $strain_slug ); ?>">
+
+    <?php if ( $strain_attr ) : ?>
+        <span class="wccs-badge" style="background:<?php echo esc_attr( $badge_color ); ?>">
+            <?php echo esc_html( strtoupper( $strain_attr ) ); ?>
+        </span>
+    <?php endif; ?>
+
+    <a href="<?php echo esc_url( $product->get_permalink() ); ?>" class="wccs-product-image">
+        <?php echo $product->get_image( 'woocommerce_thumbnail' ); ?>
+    </a>
+
+    <div class="wccs-product-info">
+        <h3 class="wccs-product-title">
+            <a href="<?php echo esc_url( $product->get_permalink() ); ?>">
+                <?php echo esc_html( $product->get_name() ); ?>
+            </a>
+        </h3>
+
+        <div class="wccs-product-price">
+            <span class="wccs-qty">1 pc</span>
+            <span class="wccs-price"><?php echo $product->get_price_html(); ?></span>
+        </div>
+
+        <button class="wccs-add-to-cart" 
+                data-product-id="<?php echo esc_attr( $product->get_id() ); ?>">
+            ADD TO CART
+        </button>
+    </div>
+</div>

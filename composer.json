@@ -1,0 +1,14 @@
+{
+    "name": "yourvendor/wc-cannabis-shop",
+    "description": "WooCommerce Cannabis Shop Shortcode Plugin",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "WCCannabisShop\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
