@@ -10,6 +10,7 @@
         <div class="wccs-search-wrap">
             <span class="wccs-search-icon">🔍</span>
             <input type="text" id="wccs-search" placeholder="Search by name" autocomplete="off">
+            <button class="wccs-search-clear" aria-label="Clear search">✕</button>
         </div>
 
         <!-- Category Icons -->
@@ -58,6 +59,11 @@
                 <button class="wccs-potency-btn" data-potency="%">%</button>
                 <button class="wccs-potency-btn" data-potency="mg">mg</button>
             </div>
+        </div>
+
+        <!-- Clear All -->
+        <div class="wccs-filter-group">
+            <button class="wccs-clear-all" id="wccs-clear-all">✕ Clear All Filters</button>
         </div>
     </aside>
 

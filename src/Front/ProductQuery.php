@@ -33,7 +33,7 @@ class ProductQuery {
         // Strain type (stored as product attribute or custom taxonomy)
         if ( ! empty( $this->filters['strain'] ) ) {
             $args['tax_query'][] = [
-                'taxonomy' => 'pa_train-type', // WC attribute taxonomy
+                'taxonomy' => 'pa_train-type', // WC attribute taxonomy (hyphens become underscores)
                 'field'    => 'slug',
                 'terms'    => explode( ',', $this->filters['strain'] ),
             ];
@@ -42,6 +42,15 @@ class ProductQuery {
         // Search
         if ( ! empty( $this->filters['search'] ) ) {
             $args['s'] = $this->filters['search'];
+        }
+
+        // Sale only: restrict to "edibles" category
+        if ( ! empty( $this->filters['sale_only'] ) ) {
+            $args['tax_query'][] = [
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => [ 'edibles' ],
+            ];
         }
 
         $query       = new \WP_Query( $args );

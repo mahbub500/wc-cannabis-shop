@@ -3,7 +3,7 @@ defined( 'ABSPATH' ) || exit;
 /** @var WC_Product $product */
 
 $cats        = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
-$strain_attr = $product->get_attribute( 'strain-type' );
+$strain_attr = $product->get_attribute( 'pa_train_type' );
 $strain_map  = [
     'indica'  => '#9b59b6',
     'sativa'  => '#3498db',
