@@ -33,7 +33,7 @@ class ProductQuery {
         // Strain type (stored as product attribute or custom taxonomy)
         if ( ! empty( $this->filters['strain'] ) ) {
             $args['tax_query'][] = [
-                'taxonomy' => 'pa_strain-type', // WC attribute taxonomy
+                'taxonomy' => 'pa_train-type', // WC attribute taxonomy
                 'field'    => 'slug',
                 'terms'    => explode( ',', $this->filters['strain'] ),
             ];
