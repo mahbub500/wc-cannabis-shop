@@ -178,6 +178,51 @@
     color: #fff;
 }
 
+/* Price filter checkboxes */
+.wccs-price-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.wccs-price-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--wccs-text);
+    user-select: none;
+    position: relative;
+}
+.wccs-price-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.wccs-custom-checkbox {
+    flex-shrink: 0;
+    transition: all .15s;
+}
+.wccs-custom-checkbox rect {
+    transition: all .15s;
+}
+.wccs-checkmark {
+    opacity: 0;
+    transition: opacity .15s;
+}
+.wccs-price-checkbox input:checked + svg rect {
+    fill: var(--wccs-primary);
+    stroke: var(--wccs-primary);
+}
+.wccs-price-checkbox input:checked + svg .wccs-checkmark {
+    opacity: 1;
+}
+.wccs-price-checkbox:hover svg rect {
+    stroke: var(--wccs-primary);
+}
+
 /* ---- Main ---- */
 .wccs-main { flex: 1; min-width: 0; }
 

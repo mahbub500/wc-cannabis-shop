@@ -51,6 +51,53 @@
             </div>
         </div>
 
+        <!-- Price -->
+        <div class="wccs-filter-group">
+            <div class="wccs-filter-title">PRICE</div>
+            <div class="wccs-price-filters">
+                <label class="wccs-price-checkbox">
+                    <input type="checkbox" name="price" value="0-20">
+                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>Under $20</span>
+                </label>
+                <label class="wccs-price-checkbox">
+                    <input type="checkbox" name="price" value="20-40">
+                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>$20 – $40</span>
+                </label>
+                <label class="wccs-price-checkbox">
+                    <input type="checkbox" name="price" value="40-60">
+                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>$40 – $60</span>
+                </label>
+                <label class="wccs-price-checkbox">
+                    <input type="checkbox" name="price" value="60-80">
+                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>$60 – $80</span>
+                </label>
+                <label class="wccs-price-checkbox">
+                    <input type="checkbox" name="price" value="80">
+                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                    </svg>
+                    <span>Over $80</span>
+                </label>
+            </div>
+        </div>
+
         <!-- Potency -->
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">POTENCY</div>

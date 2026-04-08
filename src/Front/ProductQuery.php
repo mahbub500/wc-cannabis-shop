@@ -53,6 +53,38 @@ class ProductQuery {
             ];
         }
 
+        // Price range filter
+        if ( ! empty( $this->filters['price'] ) ) {
+            $price_ranges = explode( ',', $this->filters['price'] );
+            $meta_queries = [];
+
+            foreach ( $price_ranges as $range ) {
+                if ( strpos( $range, '-' ) !== false ) {
+                    // Range like "20-40"
+                    list( $min, $max ) = explode( '-', $range );
+                    $meta_queries[] = [
+                        'key'     => '_price',
+                        'value'   => [ (float) $min, (float) $max ],
+                        'type'    => 'NUMERIC',
+                        'compare' => 'BETWEEN',
+                    ];
+                } else {
+                    // "80" means over $80
+                    $meta_queries[] = [
+                        'key'     => '_price',
+                        'value'   => (float) $range,
+                        'type'    => 'NUMERIC',
+                        'compare' => '>=',
+                    ];
+                }
+            }
+
+            if ( ! empty( $meta_queries ) ) {
+                $meta_queries['relation'] = 'OR';
+                $args['meta_query'][]     = $meta_queries;
+            }
+        }
+
         $query       = new \WP_Query( $args );
         $this->total = $query->found_posts;
 

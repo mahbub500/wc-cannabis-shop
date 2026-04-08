@@ -23,6 +23,7 @@
         paged      : 1,
         per_page   : parseInt( shop.dataset.perPage, 10 ) || 12,
         sale_only  : false,
+        price      : [],
     };
 
     let debounceTimer = null;
@@ -55,6 +56,7 @@
             per_page  : state.per_page,
             paged     : state.paged,
             sale_only : state.sale_only ? '1' : '0',
+            price     : state.price.join( ',' ),
         } );
 
         try {
@@ -139,6 +141,18 @@
         } );
     }
 
+    /* ---- Price range checkboxes ---- */
+
+    shop.querySelectorAll( '.wccs-price-checkbox input' ).forEach( cb => {
+        cb.addEventListener( 'change', () => {
+            const active = [ ...shop.querySelectorAll( '.wccs-price-checkbox input:checked' ) ]
+                .map( c => c.value );
+            state.price = active;
+            resetPage();
+            fetchProducts();
+        } );
+    } );
+
     /* ---- Search ---- */
 
     const searchInput = shop.querySelector( '#wccs-search' );
@@ -195,12 +209,14 @@
             state.strain   = '';
             state.search   = '';
             state.sale_only = false;
+            state.price    = [];
 
             searchInput.value = '';
             searchClear.classList.remove( 'visible' );
 
             shop.querySelectorAll( '.wccs-cat-icon' ).forEach( b => b.classList.remove( 'active' ) );
             shop.querySelectorAll( '.wccs-strain-btn' ).forEach( b => b.classList.remove( 'active' ) );
+            shop.querySelectorAll( '.wccs-price-checkbox input' ).forEach( cb => cb.checked = false );
 
             if ( saleCheckbox ) saleCheckbox.checked = false;
 

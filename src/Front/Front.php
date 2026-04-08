@@ -62,6 +62,7 @@ class Front {
             'per_page'    => absint( $_POST['per_page'] ?? 12 ),
             'paged'       => absint( $_POST['paged'] ?? 1 ),
             'sale_only'   => ! empty( $_POST['sale_only'] ),
+            'price'       => sanitize_text_field( $_POST['price'] ?? '' ),
         ];
 
         $query    = new ProductQuery( $filters );
