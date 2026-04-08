@@ -223,6 +223,35 @@
     stroke: var(--wccs-primary);
 }
 
+/* Special sale checkbox */
+.wccs-special-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--wccs-text);
+    user-select: none;
+    position: relative;
+}
+.wccs-special-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.wccs-special-checkbox input:checked + svg rect {
+    fill: var(--wccs-primary);
+    stroke: var(--wccs-primary);
+}
+.wccs-special-checkbox input:checked + svg .wccs-checkmark {
+    opacity: 1;
+}
+.wccs-special-checkbox:hover svg rect {
+    stroke: var(--wccs-primary);
+}
+
 /* ---- Main ---- */
 .wccs-main { flex: 1; min-width: 0; }
 

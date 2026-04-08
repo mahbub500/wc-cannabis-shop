@@ -34,8 +34,13 @@
         <!-- Specials -->
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">🔥 SPECIALS</div>
-            <label class="wccs-checkbox">
-                <input type="checkbox" id="wccs-sale-only"> 10 percent off edibles
+            <label class="wccs-special-checkbox">
+                <input type="checkbox" id="wccs-sale-only">
+                <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
+                    <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
+                    <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                </svg>
+                <span>10 percent off edibles</span>
             </label>
         </div>
 

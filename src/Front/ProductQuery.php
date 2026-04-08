@@ -44,12 +44,13 @@ class ProductQuery {
             $args['s'] = $this->filters['search'];
         }
 
-        // Sale only: restrict to "edibles" category
+        // Sale only: products with sale price
         if ( ! empty( $this->filters['sale_only'] ) ) {
-            $args['tax_query'][] = [
-                'taxonomy' => 'product_cat',
-                'field'    => 'slug',
-                'terms'    => [ 'edibles' ],
+            $args['meta_query'][] = [
+                'key'     => '_sale_price',
+                'value'   => '',
+                'type'    => 'NUMERIC',
+                'compare' => '!=',
             ];
         }
 
