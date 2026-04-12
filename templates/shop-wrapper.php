@@ -4,21 +4,7 @@
      data-per-page="<?php echo esc_attr( $this->atts['per_page'] ); ?>"
      data-columns="<?php echo esc_attr( $this->atts['columns'] ); ?>">
 
-    <!-- Sidebar Filters -->
-    <aside class="wccs-sidebar">
-
-        <div class="wccs-search-wrap">
-            <span class="wccs-search-icon">🔍</span>
-            <input type="text" id="wccs-search" placeholder="Search by name" autocomplete="off">
-            <button class="wccs-search-clear" aria-label="Clear search">✕</button>
-        </div>
-
-        <!-- Clear Filters (above categories) -->
-        <div class="wccs-filter-group">
-            <button class="wccs-clear-filters" id="wccs-clear-filters-top">Clear</button>
-        </div>
-
-        <!-- Category Icons -->
+     <!-- Category Icons -->
         <div class="wccs-category-icons">
             <?php foreach ( $cats as $cat ) : ?>
                 <?php if ( $cat->slug === 'uncategorized' ) continue; ?>
@@ -35,6 +21,24 @@
                 </div>
             <?php endforeach; ?>
         </div>
+
+    <!-- Sidebar Filters -->
+    <aside class="wccs-sidebar">
+
+
+
+        <div class="wccs-search-wrap">
+            <span class="wccs-search-icon">🔍</span>
+            <input type="text" id="wccs-search" placeholder="Search by name" autocomplete="off">
+            <button class="wccs-search-clear" aria-label="Clear search">✕</button>
+        </div>
+
+        <!-- Clear Filters (above categories) -->
+        <div class="wccs-filter-group">
+            <button class="wccs-clear-filters" id="wccs-clear-filters-top">Clear</button>
+        </div>
+
+        
 
         <!-- Specials -->
         <div class="wccs-filter-group">
