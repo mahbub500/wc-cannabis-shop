@@ -282,3 +282,195 @@
     } );
 
 } )();
+
+
+/**
+ * WC Cannabis Shop — Product Quick-View Popup
+ * Drop this file in your plugin's /assets/js/ folder and enqueue it.
+ * Requires: jQuery (already loaded by WooCommerce)
+ */
+(function ($) {
+    'use strict';
+
+    /* ─── Build popup HTML once ─── */
+    const POPUP_ID = 'wccs-quickview-overlay';
+
+    function buildOverlay() {
+        if ($('#' + POPUP_ID).length) return;
+
+        $('body').append(`
+        <div id="${POPUP_ID}" class="wccs-qv-overlay" role="dialog" aria-modal="true" aria-label="Product quick view">
+            <div class="wccs-qv-backdrop"></div>
+            <div class="wccs-qv-modal">
+                <button class="wccs-qv-close" aria-label="Close">
+                    <svg viewBox="0 0 16 16" width="18" height="18">
+                        <path d="M2.343 2.343L13.657 13.657" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M13.657 2.343L2.343 13.657" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div class="wccs-qv-inner">
+                    <div class="wccs-qv-image-wrap">
+                        <img class="wccs-qv-image" src="" alt="">
+                        <span class="wccs-qv-badge"></span>
+                    </div>
+                    <div class="wccs-qv-details">
+                        <h2 class="wccs-qv-title"></h2>
+                        <div class="wccs-qv-price-row">
+                            <span class="wccs-qv-price"></span>
+                            <span class="wccs-qv-unit"></span>
+                        </div>
+                        <div class="wccs-qv-description"></div>
+                        <div class="wccs-qv-actions">
+                            <div class="wccs-qv-qty-wrap">
+                                <button class="wccs-qv-qty-btn wccs-qv-minus" aria-label="Decrease quantity">
+                                    <svg width="14" height="2" viewBox="0 0 14 2"><rect width="14" height="2" rx="1" fill="currentColor"/></svg>
+                                </button>
+                                <span class="wccs-qv-qty-display">1 pc</span>
+                                <button class="wccs-qv-qty-btn wccs-qv-plus" aria-label="Increase quantity">
+                                    <svg width="14" height="14" viewBox="0 0 14 14"><path d="M6 0h2v14H6zM0 6h14v2H0z" fill="currentColor"/></svg>
+                                </button>
+                            </div>
+                            <button class="wccs-qv-atc">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`);
+
+        bindOverlayEvents();
+    }
+
+    /* ─── Bind close / qty events ─── */
+    function bindOverlayEvents() {
+        const $overlay = $('#' + POPUP_ID);
+
+        // Close on backdrop or X button
+        $overlay.on('click', '.wccs-qv-backdrop, .wccs-qv-close', closePopup);
+
+        // Close on Escape key
+        $(document).on('keydown.wccs-qv', function (e) {
+            if (e.key === 'Escape') closePopup();
+        });
+
+        // Quantity controls
+        $overlay.on('click', '.wccs-qv-minus', function () {
+            let qty = parseInt($overlay.data('qty') || 1);
+            if (qty > 1) {
+                qty--;
+                $overlay.data('qty', qty);
+                $overlay.find('.wccs-qv-qty-display').text(qty + ' pc');
+                $overlay.find('.wccs-qv-minus').prop('disabled', qty <= 1);
+            }
+        });
+
+        $overlay.on('click', '.wccs-qv-plus', function () {
+            let qty = parseInt($overlay.data('qty') || 1);
+            qty++;
+            $overlay.data('qty', qty);
+            $overlay.find('.wccs-qv-qty-display').text(qty + ' pc');
+            $overlay.find('.wccs-qv-minus').prop('disabled', false);
+        });
+
+        // Add to cart — fires WooCommerce AJAX add-to-cart
+        $overlay.on('click', '.wccs-qv-atc', function () {
+            const productId = $overlay.data('product-id');
+            const qty       = parseInt($overlay.data('qty') || 1);
+            const $btn      = $(this);
+
+            if (!productId) return;
+
+            $btn.addClass('wccs-qv-loading').prop('disabled', true).text('Adding…');
+
+            $.ajax({
+                url: wc_add_to_cart_params.ajax_url,
+                type: 'POST',
+                data: {
+                    action:     'wccs_add_to_cart',
+                    product_id: productId,
+                    quantity:   qty,
+                    nonce:      wccs.nonce,
+                },
+                success: function (res) {
+                    if (res.success) {
+                        $btn.removeClass('wccs-qv-loading').addClass('wccs-qv-added').text('✓ Added!');
+                        // Trigger WooCommerce cart fragment refresh
+                        $(document.body).trigger('wc_fragment_refresh');
+                        setTimeout(function () {
+                            $btn.removeClass('wccs-qv-added').prop('disabled', false).text('Add to Cart');
+                        }, 2000);
+                    } else {
+                        $btn.removeClass('wccs-qv-loading').prop('disabled', false).text('Add to Cart');
+                    }
+                },
+                error: function () {
+                    $btn.removeClass('wccs-qv-loading').prop('disabled', false).text('Add to Cart');
+                }
+            });
+        });
+    }
+
+    /* ─── Open popup with product data ─── */
+    function openPopup($card) {
+        const $overlay = $('#' + POPUP_ID);
+
+        // Pull data from the card DOM
+        const productId   = $card.data('product-id') || $card.find('[data-product-id]').data('product-id');
+        const title       = $card.find('.wccs-product-title').text().trim();
+        const price       = $card.find('.wccs-price').html();
+        const unit        = $card.find('.wccs-qty').text().trim();
+        const imgSrc      = $card.find('.wccs-product-image img').attr('src') || '';
+        const imgAlt      = $card.find('.wccs-product-image img').attr('alt') || title;
+        const badgeText   = $card.find('.wccs-badge').text().trim();
+        const badgeColor  = $card.find('.wccs-badge').css('background-color') || '';
+        const description = $card.find('.wccs-product-description').html() || '';
+
+        // Reset qty
+        $overlay.data('qty', 1).data('product-id', productId);
+
+        // Populate
+        $overlay.find('.wccs-qv-image').attr({ src: imgSrc, alt: imgAlt });
+        $overlay.find('.wccs-qv-title').text(title);
+        $overlay.find('.wccs-qv-price').html(price);
+        $overlay.find('.wccs-qv-unit').text(unit ? '/ ' + unit : '');
+        $overlay.find('.wccs-qv-description').html(description);
+        $overlay.find('.wccs-qv-qty-display').text('1 pc');
+        $overlay.find('.wccs-qv-minus').prop('disabled', true);
+        $overlay.find('.wccs-qv-atc').prop('disabled', false).removeClass('wccs-qv-loading wccs-qv-added').text('Add to Cart');
+
+        if (badgeText) {
+            $overlay.find('.wccs-qv-badge').text(badgeText).css('background-color', badgeColor).show();
+        } else {
+            $overlay.find('.wccs-qv-badge').hide();
+        }
+
+        // Show
+        $overlay.addClass('wccs-qv-active');
+        $('body').addClass('wccs-qv-open');
+        $overlay.find('.wccs-qv-close').trigger('focus');
+    }
+
+    function closePopup() {
+        $('#' + POPUP_ID).removeClass('wccs-qv-active');
+        $('body').removeClass('wccs-qv-open');
+    }
+
+    /* ─── Init: bind click on product cards ─── */
+    function init() {
+        buildOverlay();
+
+        // Click on image or title opens popup
+        $(document).on('click', '.wccs-product-card .wccs-product-image, .wccs-product-title a', function (e) {
+            e.preventDefault();
+            const $card = $(this).closest('.wccs-product-card');
+            openPopup($card);
+        });
+
+        // Prevent "Add to Cart" button on card from opening popup
+        $(document).on('click', '.wccs-product-card .wccs-add-to-cart', function (e) {
+            e.stopPropagation();
+        });
+    }
+
+    $(document).ready(init);
+
+})(jQuery);

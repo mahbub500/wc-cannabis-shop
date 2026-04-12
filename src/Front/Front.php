@@ -37,8 +37,12 @@ class Front {
 
         wp_localize_script( 'wccs-script', 'wccs', [
             'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'wccs_nonce' ),
+            'nonce'    => wp_create_nonce( 'wccs_add_to_cart' ),
         ] );
+
+        // wp_localize_script( 'wccs-quickview', 'wccsQV', [
+        //     'nonce' => wp_create_nonce('wccs_add_to_cart'),
+        // ]);
     }
 
     public function render_shortcode( array $atts ): string {
