@@ -88,7 +88,7 @@
    CATEGORY BAR
 ══════════════════════════════════════════ */
 .wccs-category-icons {
-    grid-area: cats;
+    /*grid-area: cats;*/
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
@@ -1212,3 +1212,4 @@ body.wccs-qv-open { overflow: hidden; }
 @media (max-width: 360px) {
     .wccs-grid { grid-template-columns: 1fr !important; }
 }
+
