@@ -211,5 +211,18 @@
             <button class="wccs-load-more" data-page="2">Load More</button>
         </div>
 
+        <!-- Store Picker Trigger -->
+        <div class="wccs-store-picker-trigger">
+            <button class="wccs-store-btn" id="wccs-store-btn">
+                <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
+                    <path d="M10 2C7.24 2 5 4.24 5 7c0 3.75 5 11 5 11s5-7.25 5-11c0-2.76-2.24-5-5-5z" fill="currentColor"/>
+                    <circle cx="10" cy="7" r="2" fill="white"/>
+                </svg>
+                Select Store
+            </button>
+        </div>
+
     </div>
 </div>
+
+<?php include WCCS_DIR . 'templates/map.php'; ?>

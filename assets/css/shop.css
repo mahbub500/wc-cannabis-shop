@@ -1213,3 +1213,59 @@ body.wccs-qv-open { overflow: hidden; }
     .wccs-grid { grid-template-columns: 1fr !important; }
 }
 
+/* ════════════════════════════════════════════════════════════
+   STORE PICKER TRIGGER BUTTON
+════════════════════════════════════════════════════════════ */
+
+.wccs-store-picker-trigger {
+    text-align: center;
+    margin-top: 32px;
+    padding: 20px 0;
+    border-top: 1px solid var(--wccs-border);
+}
+
+.wccs-store-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: 1.5px solid var(--wccs-primary);
+    border-radius: 30px;
+    background: var(--wccs-surface);
+    color: var(--wccs-primary);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: all var(--wccs-tr);
+    box-shadow: var(--wccs-shadow-sm);
+}
+
+.wccs-store-btn svg {
+    color: var(--wccs-primary);
+    transition: color var(--wccs-tr);
+}
+
+.wccs-store-btn:hover {
+    background: var(--wccs-primary);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(29,158,117,.3);
+    transform: translateY(-1px);
+}
+
+.wccs-store-btn:hover svg { color: #fff; }
+
+.wccs-store-btn:active { transform: scale(.98); }
+
+@media (prefers-color-scheme: dark) {
+    .wccs-store-btn {
+        background: var(--wccs-surface-2);
+        color: var(--wccs-primary-mid);
+        border-color: var(--wccs-primary-mid);
+    }
+    .wccs-store-btn:hover {
+        background: var(--wccs-primary-mid);
+        color: #111310;
+    }
+}
+

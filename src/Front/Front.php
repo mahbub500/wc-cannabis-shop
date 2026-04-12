@@ -29,10 +29,35 @@ class Front {
             '1.0.0'
         );
 
+        // Map/Store Picker styles
+        wp_enqueue_style(
+            'wccs-map-style',
+            WCCS_URL . 'assets/css/map.css',
+            [],
+            '1.0.0'
+        );
+
+        // Map/Store Picker script (must load BEFORE shop.js)
+        wp_enqueue_script(
+            'wccs-map-script',
+            WCCS_URL . 'assets/js/map.js',
+            [],
+            '1.0.0',
+            true
+        );
+
+        // Store data for the map widget
+        $stores_data = $this->get_store_data();
+        wp_add_inline_script(
+            'wccs-map-script',
+            'window.WCCS_STORES = ' . wp_json_encode( $stores_data ) . ';',
+            'before'
+        );
+
         wp_enqueue_script(
             'wccs-script',
             WCCS_URL . 'assets/js/shop.js',
-            [],
+            [ 'wccs-map-script' ],
             '1.0.0',
             true
         );
@@ -42,6 +67,51 @@ class Front {
             'nonce'     => wp_create_nonce( 'wccs_nonce' ),
             'cart_nonce' => wp_create_nonce( 'wccs_add_to_cart' ),
         ] );
+    }
+
+    /**
+     * Get store data for the map widget.
+     * Customize this with your actual store locations.
+     */
+    private function get_store_data(): array {
+        return [
+            [
+                'id'       => 'fairview',
+                'name'     => '6ix Dispensary Fairview Mall Dr',
+                'address'  => '245 Fairview Mall Drive, Toronto, ON M2J 4T1',
+                'distance' => '7725.5 mi',
+                'hours'    => '9:00 AM – 3:00 AM',
+                'open'     => true,
+                'lat'      => 43.7776,
+                'lng'      => -79.3468,
+                'logo'     => 'https://dr5urbp0m8lal.cloudfront.net/1/office_logo/93eadd5e010da80cc86e0e41b63c7074.jpeg?width=88&height=88',
+                'color'    => '#1bb98a',
+            ],
+            [
+                'id'       => 'bloor',
+                'name'     => '6ix Dispensary Bloor ST W',
+                'address'  => '863 Bloor St W, Toronto, ON M6G 1M2',
+                'distance' => '7734.2 mi',
+                'hours'    => '12:00 AM – 12:00 AM',
+                'open'     => true,
+                'lat'      => 43.6629,
+                'lng'      => -79.4215,
+                'logo'     => 'https://dr5urbp0m8lal.cloudfront.net/1/office_logo/44f3f6aaa048bf92d5868e05d8b42bf3.jpeg?width=88&height=88',
+                'color'    => '#953EB1',
+            ],
+            [
+                'id'       => 'queen',
+                'name'     => '6ix Dispensary Queen St West',
+                'address'  => '452 Queen St West, Toronto, ON M5V 2A8',
+                'distance' => '7734.9 mi',
+                'hours'    => '12:00 AM – 12:00 AM',
+                'open'     => true,
+                'lat'      => 43.6484,
+                'lng'      => -79.4021,
+                'logo'     => 'https://dr5urbp0m8lal.cloudfront.net/1/office_logo/6cef4a4b9d0c20d35b6808ef366ad62b.jpeg?width=88&height=88',
+                'color'    => '#953EB1',
+            ],
+        ];
     }
 
     public function render_shortcode( array $atts ): string {

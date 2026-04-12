@@ -645,3 +645,45 @@
     $( document ).ready( init );
 
 } )( jQuery );
+
+
+/* ════════════════════════════════════════════════════════════
+   WC Cannabis Shop — Store Picker Init
+════════════════════════════════════════════════════════════ */
+( function () {
+    'use strict';
+
+    if ( typeof StorePicker === 'undefined' ) {
+        console.warn( 'WCCS: StorePicker not loaded from map.js' );
+        return;
+    }
+    if ( typeof WCCS_STORES === 'undefined' ) {
+        console.warn( 'WCCS: WCCS_STORES not defined' );
+        return;
+    }
+
+    console.log( 'WCCS: StorePicker initializing with', WCCS_STORES.length, 'stores' );
+
+    StorePicker.init( WCCS_STORES, {
+        // Optional Google Maps API key:
+        // googleMapsApiKey: 'YOUR_KEY_HERE',
+        onSelect: function( store, tab ) {
+            console.log( 'Selected:', store.name, 'via', tab );
+        },
+        onClose: function() {
+            console.log( 'Picker closed' );
+        },
+    } );
+
+    const storeBtn = document.getElementById( 'wccs-store-btn' );
+    if ( storeBtn ) {
+        console.log( 'WCCS: Store button found, binding click' );
+        storeBtn.addEventListener( 'click', function() {
+            console.log( 'WCCS: Store button clicked' );
+            StorePicker.open();
+        } );
+    } else {
+        console.warn( 'WCCS: Store button NOT found' );
+    }
+
+} )();
