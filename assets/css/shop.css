@@ -1,6 +1,6 @@
-/* ========== WC Cannabis Shop â€” Modern CSS (v2) ========== */
+/* ========== WC Cannabis Shop — Modern CSS (v3) ========== */
 
-/* â”€â”€ Variables â”€â”€ */
+/* ── Variables ── */
 :root {
     --wccs-primary:       #1D9E75;
     --wccs-primary-light: #E1F5EE;
@@ -57,20 +57,23 @@
     }
 }
 
-/* â”€â”€ Reset â”€â”€ */
+/* ── Reset ── */
 .wccs-shop *, .wccs-shop *::before, .wccs-shop *::after {
     box-sizing: border-box;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   WRAPPER  â€”  vertical stack:
-   [category bar]
-   [sidebar | main]
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ══════════════════════════════════════════
+   WRAPPER
+══════════════════════════════════════════ */
 .wccs-shop {
-    display: flex;
-    flex-direction: column;   /* stack cat-bar on top, then row below */
-    gap: 20px;
+    display: grid;
+    grid-template-areas:
+        "cats  cats"
+        "side  main";
+    grid-template-columns: 230px 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 24px;
+    row-gap: 20px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
     font-size: 14px;
     color: var(--wccs-text);
@@ -81,31 +84,11 @@
     min-height: 100vh;
 }
 
-/* Inner row that holds sidebar + main */
-.wccs-shop > .wccs-sidebar,
-.wccs-shop > .wccs-main {
-    /* these two become a flex-row via the inner wrapper below */
-}
-
-/* We need a flex-row wrapper for sidebar + main.
-   Since the PHP doesn't have one, we use a CSS trick:
-   make .wccs-sidebar + .wccs-main sit side-by-side
-   by switching the shop back to a partial-row layout. */
-.wccs-shop {
-    display: grid;
-    grid-template-areas:
-        "cats  cats"
-        "side  main";
-    grid-template-columns: 230px 1fr;
-    grid-template-rows: auto 1fr;
-    column-gap: 24px;
-    row-gap: 20px;
-}
-
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   CATEGORY BAR  (top, full width)
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ══════════════════════════════════════════
+   CATEGORY BAR
+══════════════════════════════════════════ */
 .wccs-category-icons {
+    grid-area: cats;
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
@@ -116,7 +99,6 @@
     border-radius: var(--wccs-radius-lg);
     padding: 12px 16px;
     box-shadow: var(--wccs-shadow-sm);
-    width-max: 1200px;
 }
 
 .wccs-cat-icon {
@@ -174,9 +156,9 @@
 
 .wccs-cat-icon.active span { color: var(--wccs-primary-text); font-weight: 800; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════
    SIDEBAR
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════ */
 .wccs-sidebar {
     grid-area: side;
     display: flex;
@@ -187,7 +169,7 @@
     top: 20px;
 }
 
-/* Search */
+/* ── Search ── */
 .wccs-search-wrap {
     position: relative;
 }
@@ -246,7 +228,7 @@
 .wccs-search-clear:hover { background: var(--wccs-primary); color: #fff; }
 .wccs-search-clear.visible { display: flex; }
 
-/* Filter panels */
+/* ── Filter panels ── */
 .wccs-filter-group {
     background: var(--wccs-surface);
     border: 1px solid var(--wccs-border);
@@ -264,7 +246,7 @@
     margin-bottom: 12px;
 }
 
-/* Clear (top) */
+/* ── Clear (top) ── */
 .wccs-clear-filters {
     display: inline-flex;
     align-items: center;
@@ -286,15 +268,14 @@
     color: #A32D2D;
 }
 
-/* Strain buttons */
+/* ── Strain buttons ── */
 .wccs-strain-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
 }
 
-.wccs-strain-btn,
-.wccs-potency-btn {
+.wccs-strain-btn {
     padding: 5px 12px;
     border: 1px solid var(--wccs-border-md);
     border-radius: 20px;
@@ -307,138 +288,17 @@
     transition: all var(--wccs-tr);
 }
 
-.wccs-strain-btn:hover,
-.wccs-potency-btn:hover {
+.wccs-strain-btn:hover {
     background: var(--wccs-primary-light);
     border-color: var(--wccs-primary-mid);
     color: var(--wccs-primary-dark);
 }
 
-.wccs-strain-btn.active,
-.wccs-potency-btn.active {
+.wccs-strain-btn.active {
     background: var(--wccs-primary);
     border-color: var(--wccs-primary);
     color: #fff;
     box-shadow: 0 2px 8px rgba(29,158,117,.28);
-}
-
-/* ── Potency Slider ── */
-.wccs-potency-type-switch {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 14px;
-}
-
-.wccs-potency-type-btn {
-    flex: 1;
-    padding: 5px 12px;
-    border: 1px solid var(--wccs-border-md);
-    border-radius: 20px;
-    background: transparent;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    color: var(--wccs-muted);
-    cursor: pointer;
-    transition: all var(--wccs-tr);
-}
-
-.wccs-potency-type-btn:hover {
-    background: var(--wccs-primary-light);
-    border-color: var(--wccs-primary-mid);
-    color: var(--wccs-primary-dark);
-}
-
-.wccs-potency-type-btn.active {
-    background: var(--wccs-primary);
-    border-color: var(--wccs-primary);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(29,158,117,.28);
-}
-
-.wccs-potency-slider {
-    margin-top: 14px;
-}
-
-.wccs-potency-slider:first-of-type { margin-top: 0; }
-
-.wccs-potency-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    color: var(--wccs-muted);
-    margin-bottom: 10px;
-}
-
-.wccs-range-slider {
-    position: relative;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    user-select: none;
-}
-
-.wccs-range-track {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--wccs-surface-2);
-    border-radius: 2px;
-}
-
-.wccs-range-fill {
-    height: 100%;
-    background: var(--wccs-primary);
-    border-radius: 2px;
-    transition: none;
-}
-
-.wccs-range-thumb {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: #fff;
-    border: 2px solid var(--wccs-primary);
-    border-radius: 50%;
-    cursor: grab;
-    z-index: 2;
-    transition: box-shadow var(--wccs-tr), transform var(--wccs-tr);
-    transform: translate(-50%, -50%);
-    top: 50%;
-}
-
-.wccs-range-thumb:hover {
-    box-shadow: 0 2px 8px rgba(29,158,117,.3);
-    transform: translate(-50%, -50%) scale(1.1);
-}
-
-.wccs-range-thumb:active { cursor: grabbing; }
-
-.wccs-range-value {
-    position: absolute;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--wccs-muted);
-    top: 4px;
-    transform: translateX(-50%);
-    pointer-events: none;
-}
-
-.wccs-range-value-min { left: 0; }
-.wccs-range-value-max { right: 0; }
-
-/* ── Potency Slider Dark ── */
-@media (prefers-color-scheme: dark) {
-    .wccs-range-track { background: #2e312b; }
-    .wccs-range-thumb { background: #23261f; border-color: #5DCAA5; }
-    .wccs-range-thumb:hover { box-shadow: 0 2px 8px rgba(93,202,165,.25); }
-}
-
-/* ── Potency Slider Responsive ── */
-@media (max-width: 860px) {
-    .wccs-range-slider { height: 32px; }
-    .wccs-range-thumb { width: 14px; height: 14px; }
 }
 
 /* Strain-specific active colors */
@@ -447,7 +307,7 @@
 .wccs-strain-btn[data-strain="hybrid"].active { background: var(--wccs-hybrid); border-color: var(--wccs-hybrid); box-shadow: 0 2px 8px rgba(239,159,39,.3); }
 .wccs-strain-btn[data-strain="cbd"].active    { background: var(--wccs-cbd);    border-color: var(--wccs-cbd);    box-shadow: 0 2px 8px rgba(99,153,34,.3); }
 
-/* Price checkboxes */
+/* ── Price checkboxes ── */
 .wccs-price-filters {
     display: flex;
     flex-direction: column;
@@ -499,7 +359,213 @@
 .wccs-price-checkbox:hover svg rect,
 .wccs-special-checkbox:hover svg rect { stroke: var(--wccs-primary); }
 
-/* Clear All */
+/* ══════════════════════════════════════════
+   POTENCY — Modern Redesign
+══════════════════════════════════════════ */
+
+/* Segmented pill switch */
+.wccs-potency-type-switch {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--wccs-surface-2);
+    border-radius: var(--wccs-radius-xl);
+    padding: 3px;
+    border: 1px solid var(--wccs-border);
+}
+
+.wccs-potency-type-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    color: var(--wccs-muted);
+    cursor: pointer;
+    transition: all var(--wccs-tr);
+}
+
+.wccs-potency-type-btn:hover {
+    color: var(--wccs-primary-dark);
+}
+
+.wccs-potency-type-btn.active {
+    background: var(--wccs-surface);
+    color: var(--wccs-primary-dark);
+    box-shadow: 0 1px 4px rgba(0,0,0,.10), 0 0 0 1px var(--wccs-border);
+}
+
+@media (prefers-color-scheme: dark) {
+    .wccs-potency-type-btn.active {
+        color: var(--wccs-primary-mid);
+        box-shadow: 0 1px 4px rgba(0,0,0,.35), 0 0 0 1px var(--wccs-border);
+    }
+}
+
+/* Slider block */
+.wccs-potency-slider {
+    margin-top: 20px;
+}
+
+.wccs-potency-slider:first-of-type {
+    margin-top: 0;
+}
+
+/* Label row: "THC" left, value pill right */
+.wccs-potency-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.wccs-potency-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--wccs-muted);
+}
+
+/* Value pill: "0% – 100%" */
+.wccs-potency-values {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--wccs-primary-light);
+    border-radius: 20px;
+    padding: 3px 10px;
+}
+
+.wccs-potency-values .wccs-range-value-min,
+.wccs-potency-values .wccs-range-value-max {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--wccs-primary-dark);
+    font-variant-numeric: tabular-nums;
+    min-width: 28px;
+    text-align: center;
+    /* override old absolute positioning */
+    position: static;
+    transform: none;
+    pointer-events: auto;
+    top: auto;
+    left: auto;
+    right: auto;
+}
+
+.wccs-potency-sep {
+    font-size: 10px;
+    color: var(--wccs-subtle);
+    font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+    .wccs-potency-values .wccs-range-value-min,
+    .wccs-potency-values .wccs-range-value-max {
+        color: var(--wccs-primary-mid);
+    }
+}
+
+/* Slider track area */
+.wccs-range-slider {
+    position: relative;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    padding: 0 8px;
+    margin-bottom: 20px;
+}
+
+/* Track */
+.wccs-range-track {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 5px;
+    background: var(--wccs-surface-2);
+    border-radius: 3px;
+    border: 1px solid var(--wccs-border);
+}
+
+@media (prefers-color-scheme: dark) {
+    .wccs-range-track { background: #2e312b; }
+}
+
+/* Gradient fill */
+.wccs-range-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wccs-primary-mid), var(--wccs-primary));
+    border-radius: 3px;
+    transition: none;
+}
+
+/* Thumbs */
+.wccs-range-thumb {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--wccs-surface);
+    border: 2.5px solid var(--wccs-primary);
+    border-radius: 50%;
+    cursor: grab;
+    z-index: 2;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 1px 4px rgba(0,0,0,.14);
+    transition: box-shadow var(--wccs-tr), transform var(--wccs-tr);
+}
+
+.wccs-range-thumb:hover {
+    box-shadow: 0 0 0 6px rgba(29,158,117,.15), 0 2px 6px rgba(0,0,0,.14);
+    transform: translate(-50%, -50%) scale(1.12);
+}
+
+.wccs-range-thumb:active {
+    cursor: grabbing;
+    box-shadow: 0 0 0 8px rgba(29,158,117,.20), 0 2px 6px rgba(0,0,0,.14);
+}
+
+@media (prefers-color-scheme: dark) {
+    .wccs-range-thumb {
+        background: #23261f;
+        border-color: #5DCAA5;
+        box-shadow: 0 1px 4px rgba(0,0,0,.45);
+    }
+    .wccs-range-thumb:hover {
+        box-shadow: 0 0 0 6px rgba(93,202,165,.18), 0 2px 6px rgba(0,0,0,.4);
+    }
+}
+
+/* Tick marks */
+.wccs-range-ticks {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    top: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    pointer-events: none;
+}
+
+.wccs-range-ticks span {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--wccs-subtle);
+    letter-spacing: .02em;
+}
+
+/* Hide old floating value labels (now shown in .wccs-potency-values pill) */
+.wccs-range-value {
+    display: none;
+}
+
+/* ── Clear All ── */
 .wccs-clear-all {
     width: 100%;
     padding: 10px 16px;
@@ -520,9 +586,9 @@
     color: #791F1F;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════
    MAIN AREA
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════ */
 .wccs-main {
     grid-area: main;
     min-width: 0;
@@ -585,9 +651,9 @@
     gap: 16px;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════
    PRODUCT CARD
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════ */
 .wccs-product-card {
     background: var(--wccs-surface);
     border: 1px solid var(--wccs-border);
@@ -727,9 +793,9 @@
     transform: scale(.98);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* ══════════════════════════════════════════
    STATES
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+══════════════════════════════════════════ */
 .wccs-loading {
     text-align: center;
     padding: 48px;
@@ -782,68 +848,15 @@
     box-shadow: 0 4px 16px rgba(29,158,117,.3);
 }
 
-.wccs-load-more[data-loading]::after { content: 'â€¦'; }
+.wccs-load-more[data-loading]::after { content: '…'; }
 
 /* Hidden */
 .wccs-product-card[hidden] { display: none !important; }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   RESPONSIVE
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* ══════════════════════════════════════════
+   QUICK VIEW POPUP
+══════════════════════════════════════════ */
 
-/* Medium screens â€” tighter sidebar */
-@media (max-width: 1100px) {
-    .wccs-shop {
-        grid-template-columns: 210px 1fr;
-        padding: 16px;
-        column-gap: 18px;
-    }
-}
-
-/* Tablet â€” collapse to single column, cat bar scrolls horizontally */
-@media (max-width: 860px) {
-    .wccs-shop {
-        grid-template-areas:
-            "cats"
-            "side"
-            "main";
-        grid-template-columns: 1fr;
-        padding: 12px;
-        gap: 14px;
-    }
-
-    .wccs-sidebar {
-        position: static;   /* un-stick on mobile */
-        width: 100%;
-    }
-
-    .wccs-category-icons {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding: 12px 16px;
-        gap: 8px;
-    }
-    .wccs-category-icons::-webkit-scrollbar { display: none; }
-
-    .wccs-cat-icon { flex: 0 0 auto; }
-}
-
-/* Small phones â€” 2-column product grid */
-@media (max-width: 600px) {
-    .wccs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-    .wccs-results-bar { flex-direction: column; align-items: flex-start; }
-}
-
-/* Very small phones â€” single column grid */
-@media (max-width: 360px) {
-    .wccs-grid { grid-template-columns: 1fr !important; }
-}
-
-/* ========== WC Cannabis Shop — Quick View Popup ========== */
-
-/* ── Overlay ── */
 .wccs-qv-overlay {
     display: none;
     position: fixed;
@@ -858,7 +871,6 @@
     display: flex;
 }
 
-/* Backdrop */
 .wccs-qv-backdrop {
     position: absolute;
     inset: 0;
@@ -868,7 +880,6 @@
     animation: wccs-qv-fade-in .2s ease;
 }
 
-/* Modal */
 .wccs-qv-modal {
     position: relative;
     background: #ffffff;
@@ -888,13 +899,11 @@
     }
 }
 
-/* Close button */
 .wccs-qv-close {
     position: absolute;
     top: 14px;
     right: 14px;
     z-index: 10;
-    /*width: 36px;*/
     height: 36px;
     border: 1px solid rgba(0,0,0,.1);
     border-radius: 50%;
@@ -910,7 +919,6 @@
     line-height: 0;
 }
 .wccs-qv-close:hover {
-    /*background: #f5f5f5;*/
     transform: scale(1.08);
     box-shadow: 0 4px 14px rgba(0,0,0,.15);
 }
@@ -919,6 +927,7 @@
     height: 18px;
     pointer-events: none;
 }
+
 @media (prefers-color-scheme: dark) {
     .wccs-qv-close {
         background: #23261f;
@@ -928,13 +937,11 @@
     .wccs-qv-close:hover { background: #2e312b; }
 }
 
-/* Inner layout — side by side */
 .wccs-qv-inner {
     display: flex;
     gap: 0;
 }
 
-/* Image panel */
 .wccs-qv-image-wrap {
     flex: 0 0 320px;
     position: relative;
@@ -957,7 +964,6 @@
     display: block;
 }
 
-/* Strain badge */
 .wccs-qv-badge {
     position: absolute;
     top: 16px;
@@ -972,7 +978,6 @@
     box-shadow: 0 2px 6px rgba(0,0,0,.2);
 }
 
-/* Details panel */
 .wccs-qv-details {
     flex: 1;
     padding: 36px 32px 32px;
@@ -993,7 +998,6 @@
     .wccs-qv-title { color: #e6ebe3; }
 }
 
-/* Price row */
 .wccs-qv-price-row {
     display: flex;
     align-items: baseline;
@@ -1010,7 +1014,6 @@
     color: #9aa096;
 }
 
-/* Description */
 .wccs-qv-description {
     font-size: 13px;
     line-height: 1.7;
@@ -1028,11 +1031,11 @@
 }
 .wccs-qv-description ul:last-child,
 .wccs-qv-description ol:last-child { margin-bottom: 0; }
+
 @media (prefers-color-scheme: dark) {
     .wccs-qv-description { color: #8a9087; }
 }
 
-/* ── Actions row ── */
 .wccs-qv-actions {
     display: flex;
     align-items: center;
@@ -1040,7 +1043,6 @@
     margin-top: auto;
 }
 
-/* Quantity control */
 .wccs-qv-qty-wrap {
     display: flex;
     align-items: center;
@@ -1081,6 +1083,7 @@
 .wccs-qv-qty-btn:hover:not(:disabled) { background: #E1F5EE; }
 .wccs-qv-qty-btn:disabled { color: #ccc; cursor: not-allowed; }
 .wccs-qv-qty-btn:not(:disabled) { color: #1D9E75; }
+
 @media (prefers-color-scheme: dark) {
     .wccs-qv-qty-btn:hover:not(:disabled) { background: #04342C; }
     .wccs-qv-qty-btn:disabled { color: #444; }
@@ -1106,7 +1109,6 @@
     }
 }
 
-/* Add to cart button */
 .wccs-qv-atc {
     flex: 1;
     height: 44px;
@@ -1130,14 +1132,11 @@
 }
 .wccs-qv-atc:active { transform: scale(.98); }
 .wccs-qv-atc:disabled { opacity: .7; cursor: not-allowed; transform: none; }
-
 .wccs-qv-atc.wccs-qv-loading { background: #0F6E56; }
 .wccs-qv-atc.wccs-qv-added   { background: #085041; }
 
-/* Body lock */
 body.wccs-qv-open { overflow: hidden; }
 
-/* ── Animations ── */
 @keyframes wccs-qv-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -1148,21 +1147,68 @@ body.wccs-qv-open { overflow: hidden; }
     to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-/* ── Responsive ── */
 @media (max-width: 680px) {
-    .wccs-qv-inner {
-        flex-direction: column;
-    }
+    .wccs-qv-inner { flex-direction: column; }
     .wccs-qv-image-wrap {
         flex: none;
         border-radius: 18px 18px 0 0;
         min-height: 220px;
         padding: 24px;
     }
-    .wccs-qv-details {
-        padding: 24px 20px 28px;
+    .wccs-qv-details { padding: 24px 20px 28px; gap: 14px; }
+    .wccs-qv-title   { font-size: 17px; }
+    .wccs-qv-price   { font-size: 22px; }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+    .wccs-shop {
+        grid-template-columns: 210px 1fr;
+        padding: 16px;
+        column-gap: 18px;
+    }
+}
+
+@media (max-width: 860px) {
+    .wccs-shop {
+        grid-template-areas:
+            "cats"
+            "side"
+            "main";
+        grid-template-columns: 1fr;
+        padding: 12px;
         gap: 14px;
     }
-    .wccs-qv-title { font-size: 17px; }
-    .wccs-qv-price { font-size: 22px; }
+
+    .wccs-sidebar {
+        position: static;
+        width: 100%;
+    }
+
+    .wccs-category-icons {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 12px 16px;
+        gap: 8px;
+    }
+    .wccs-category-icons::-webkit-scrollbar { display: none; }
+
+    .wccs-cat-icon { flex: 0 0 auto; }
+
+    .wccs-range-slider { height: 32px; }
+    .wccs-range-thumb  { width: 18px; height: 18px; }
+}
+
+@media (max-width: 600px) {
+    .wccs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .wccs-results-bar { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 360px) {
+    .wccs-grid { grid-template-columns: 1fr !important; }
 }

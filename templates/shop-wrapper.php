@@ -4,29 +4,28 @@
      data-per-page="<?php echo esc_attr( $this->atts['per_page'] ); ?>"
      data-columns="<?php echo esc_attr( $this->atts['columns'] ); ?>">
 
-     <!-- Category Icons -->
-        <div class="wccs-category-icons">
-            <?php foreach ( $cats as $cat ) : ?>
-                <?php if ( $cat->slug === 'uncategorized' ) continue; ?>
-                <div class="wccs-cat-icon" data-cat="<?php echo esc_attr( $cat->slug ); ?>">
-                    <?php
-                    $thumbnail_id = get_term_meta( $cat->term_id, 'thumbnail_id', true );
-                    if ( $thumbnail_id ) {
-                        echo wp_get_attachment_image( $thumbnail_id, [60,60] );
-                    } else {
-                        echo '<span class="wccs-cat-placeholder">📦</span>';
-                    }
-                    ?>
-                    <span><?php echo esc_html( $cat->name ); ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
+    <!-- Category Icons -->
+    <div class="wccs-category-icons">
+        <?php foreach ( $cats as $cat ) : ?>
+            <?php if ( $cat->slug === 'uncategorized' ) continue; ?>
+            <div class="wccs-cat-icon" data-cat="<?php echo esc_attr( $cat->slug ); ?>">
+                <?php
+                $thumbnail_id = get_term_meta( $cat->term_id, 'thumbnail_id', true );
+                if ( $thumbnail_id ) {
+                    echo wp_get_attachment_image( $thumbnail_id, [60,60] );
+                } else {
+                    echo '<span class="wccs-cat-placeholder">📦</span>';
+                }
+                ?>
+                <span><?php echo esc_html( $cat->name ); ?></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
     <!-- Sidebar Filters -->
     <aside class="wccs-sidebar">
 
-
-
+        <!-- Search -->
         <div class="wccs-search-wrap">
             <span class="wccs-search-icon">🔍</span>
             <input type="text" id="wccs-search" placeholder="Search by name" autocomplete="off">
@@ -37,8 +36,6 @@
         <div class="wccs-filter-group">
             <button class="wccs-clear-filters" id="wccs-clear-filters-top">Clear</button>
         </div>
-
-        
 
         <!-- Specials -->
         <div class="wccs-filter-group">
@@ -115,6 +112,8 @@
         <!-- Potency -->
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">POTENCY</div>
+
+            <!-- % / mg segmented switch -->
             <div class="wccs-potency-type-switch">
                 <button class="wccs-potency-type-btn active" data-type="%">%</button>
                 <button class="wccs-potency-type-btn" data-type="mg">mg</button>
@@ -122,15 +121,23 @@
 
             <!-- THC Slider -->
             <div class="wccs-potency-slider">
-                <div class="wccs-potency-label">THC</div>
+                <div class="wccs-potency-row">
+                    <div class="wccs-potency-label">THC</div>
+                    <div class="wccs-potency-values">
+                        <span class="wccs-range-value-min">0%</span>
+                        <span class="wccs-potency-sep">–</span>
+                        <span class="wccs-range-value-max">100%</span>
+                    </div>
+                </div>
                 <div class="wccs-range-slider" data-field="thc" data-unit="%">
                     <div class="wccs-range-track">
                         <div class="wccs-range-fill"></div>
                     </div>
                     <div class="wccs-range-thumb wccs-range-min" data-thumb="min"></div>
                     <div class="wccs-range-thumb wccs-range-max" data-thumb="max"></div>
-                    <div class="wccs-range-value wccs-range-value-min">0%</div>
-                    <div class="wccs-range-value wccs-range-value-max">100%</div>
+                    <div class="wccs-range-ticks">
+                        <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                    </div>
                     <input type="hidden" class="wccs-range-input-min" value="0">
                     <input type="hidden" class="wccs-range-input-max" value="100">
                 </div>
@@ -138,15 +145,23 @@
 
             <!-- CBD Slider -->
             <div class="wccs-potency-slider">
-                <div class="wccs-potency-label">CBD</div>
+                <div class="wccs-potency-row">
+                    <div class="wccs-potency-label">CBD</div>
+                    <div class="wccs-potency-values">
+                        <span class="wccs-range-value-min">0%</span>
+                        <span class="wccs-potency-sep">–</span>
+                        <span class="wccs-range-value-max">100%</span>
+                    </div>
+                </div>
                 <div class="wccs-range-slider" data-field="cbd" data-unit="%">
                     <div class="wccs-range-track">
                         <div class="wccs-range-fill"></div>
                     </div>
                     <div class="wccs-range-thumb wccs-range-min" data-thumb="min"></div>
                     <div class="wccs-range-thumb wccs-range-max" data-thumb="max"></div>
-                    <div class="wccs-range-value wccs-range-value-min">0%</div>
-                    <div class="wccs-range-value wccs-range-value-max">100%</div>
+                    <div class="wccs-range-ticks">
+                        <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                    </div>
                     <input type="hidden" class="wccs-range-input-min" value="0">
                     <input type="hidden" class="wccs-range-input-max" value="100">
                 </div>
@@ -157,6 +172,7 @@
         <div class="wccs-filter-group">
             <button class="wccs-clear-all" id="wccs-clear-all">✕ Clear All Filters</button>
         </div>
+
     </aside>
 
     <!-- Main Content -->
@@ -194,5 +210,6 @@
         <div class="wccs-pagination">
             <button class="wccs-load-more" data-page="2">Load More</button>
         </div>
+
     </div>
 </div>
