@@ -24,7 +24,11 @@ const StorePicker = ( function () {
     let _activeTab   = 'pickup';
     let _map         = null;   // Google Map instance
     let _markers     = [];     // Google Marker instances
+    /* ── SVG map state ── */
     let _svgPins     = [];     // Fallback SVG pins (no Maps API)
+    let _svgBounds   = null;   // Bounding box for SVG map
+    let _svgContainer = null;  // Map container ref for repositioning
+    let _positionPins = null;  // Exposed fn for repositioning
     let _mapReady    = false;
     let _initialized = false;
 
@@ -65,6 +69,15 @@ const StorePicker = ( function () {
         overlay.classList.add( 'sp-active' );
         document.body.classList.add( 'sp-open' );
         closeBtn.focus();
+
+        // Reposition SVG pins after modal becomes visible
+        if ( _svgPins.length && _positionPins ) {
+            requestAnimationFrame( () => {
+                requestAnimationFrame( () => {
+                    _positionPins();
+                } );
+            } );
+        }
 
         // Re-center map if already loaded
         if ( _map && _selected ) {
@@ -331,16 +344,18 @@ const StorePicker = ( function () {
         const padLat = ( maxLat - minLat ) * 0.4 || 0.05;
         const padLng = ( maxLng - minLng ) * 0.4 || 0.05;
 
-        const bMinLat = minLat - padLat;
-        const bMaxLat = maxLat + padLat;
-        const bMinLng = minLng - padLng;
-        const bMaxLng = maxLng + padLng;
+        _svgBounds = {
+            minLat: minLat - padLat,
+            maxLat: maxLat + padLat,
+            minLng: minLng - padLng,
+            maxLng: maxLng + padLng,
+        };
 
-        const container = mapEl;
-        container.style.position = 'absolute';
-        container.style.inset     = '0';
-        container.style.background = '#e8ede8';
-        container.style.overflow   = 'hidden';
+        _svgContainer = mapEl;
+        _svgContainer.style.position = 'absolute';
+        _svgContainer.style.inset     = '0';
+        _svgContainer.style.background = '#e8ede8';
+        _svgContainer.style.overflow   = 'hidden';
 
         mapPlaceholder.classList.add( 'sp-hidden' );
 
@@ -372,7 +387,7 @@ const StorePicker = ( function () {
         bg.setAttribute( 'height', '100%' );
         bg.setAttribute( 'fill', 'url(#sp-grid)' );
         svg.appendChild( bg );
-        container.appendChild( svg );
+        _svgContainer.appendChild( svg );
 
         // Place pins as absolutely-positioned divs over the SVG
         _svgPins = [];
@@ -387,15 +402,20 @@ const StorePicker = ( function () {
 
             pin.addEventListener( 'click', () => _selectStore( store.id ) );
 
-            container.appendChild( pin );
+            _svgContainer.appendChild( pin );
             _svgPins.push( { id: store.id, pin, lat: store.lat, lng: store.lng } );
         } );
 
-        // Position pins — use ResizeObserver for accuracy
-        function positionPins() {
-            const w = container.offsetWidth;
-            const h = container.offsetHeight;
-            if ( ! w || ! h ) return;
+        // Exposed position function for repositioning after modal opens
+        _positionPins = function() {
+            const w = _svgContainer.offsetWidth;
+            const h = _svgContainer.offsetHeight;
+            if ( ! w || ! h ) {
+                console.warn( 'WCCS: SVG container has 0 dimensions, waiting for next frame' );
+                return;
+            }
+
+            const { minLat: bMinLat, maxLat: bMaxLat, minLng: bMinLng, maxLng: bMaxLng } = _svgBounds;
 
             _svgPins.forEach( ( { pin, lat, lng } ) => {
                 const x = ( ( lng - bMinLng ) / ( bMaxLng - bMinLng ) ) * w;
@@ -403,11 +423,16 @@ const StorePicker = ( function () {
                 pin.style.left = x + 'px';
                 pin.style.top  = y + 'px';
             } );
-        }
 
-        const ro = new ResizeObserver( positionPins );
-        ro.observe( container );
-        positionPins();
+            console.log( 'WCCS: Pins repositioned at', w + 'x' + h );
+        };
+
+        // Initial position (will be 0 if hidden, repositioned on open)
+        const ro = new ResizeObserver( _positionPins );
+        ro.observe( _svgContainer );
+        _positionPins();
+
+        console.log( 'WCCS: SVG map initialized with', _svgPins.length, 'pins' );
     }
 
     function _pinSVG( color, logoUrl ) {
