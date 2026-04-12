@@ -2,22 +2,26 @@
 defined( 'ABSPATH' ) || exit;
 /** @var WC_Product $product */
 
-$cats        = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
-$strain_attr = $product->get_attribute( 'pa_train_type' );
-$strain_map  = [
+$cats          = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
+$strain_attr   = $product->get_attribute( 'pa_train_type' );
+$sale_enabled  = get_post_meta( $product->get_id(), '_wccs_sale_enabled', true );
+$strain_map    = [
     'indica'  => '#9b59b6',
     'sativa'  => '#3498db',
     'hybrid'  => '#e67e22',
     'cbd'     => '#27ae60',
 ];
-$strain_slug = strtolower( $strain_attr );
-$badge_color = $strain_map[ $strain_slug ] ?? '#888';
+$strain_slug   = strtolower( $strain_attr );
+$badge_color   = $strain_map[ $strain_slug ] ?? '#888';
 ?>
-<div class="wccs-product-card" 
+<div class="wccs-product-card"
      data-cat="<?php echo esc_attr( implode( ',', wp_list_pluck( wp_get_post_terms( $product->get_id(), 'product_cat' ), 'slug' ) ) ); ?>"
-     data-strain="<?php echo esc_attr( $strain_slug ); ?>">
+     data-strain="<?php echo esc_attr( $strain_slug ); ?>"
+     data-product-id="<?php echo esc_attr( $product->get_id() ); ?>">
 
-    <?php if ( $strain_attr ) : ?>
+    <?php if ( $sale_enabled === '1' ) : ?>
+        <span class="wccs-badge" style="background:#E24B4A;">SALE</span>
+    <?php elseif ( $strain_attr ) : ?>
         <span class="wccs-badge" style="background:<?php echo esc_attr( $badge_color ); ?>">
             <?php echo esc_html( strtoupper( $strain_attr ) ); ?>
         </span>

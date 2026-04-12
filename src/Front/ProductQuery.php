@@ -44,13 +44,12 @@ class ProductQuery {
             $args['s'] = $this->filters['search'];
         }
 
-        // Sale only: products with sale price
+        // Sale only: products with sale meta enabled
         if ( ! empty( $this->filters['sale_only'] ) ) {
             $args['meta_query'][] = [
-                'key'     => '_sale_price',
-                'value'   => '',
-                'type'    => 'NUMERIC',
-                'compare' => '!=',
+                'key'     => '_wccs_sale_enabled',
+                'value'   => '1',
+                'compare' => '=',
             ];
         }
 
