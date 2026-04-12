@@ -414,10 +414,15 @@
                         // Trigger WooCommerce cart fragment refresh
                         $(document.body).trigger('wc_fragment_refresh');
                         $(document.body).trigger('added_to_cart');
-                        
+
+                        // Close popup after short delay
                         setTimeout(function () {
-                            $btn.removeClass('wccs-qv-added').prop('disabled', false).text('Add to Cart');
-                        }, 2000);
+                            closePopup();
+                            // Reset button state after popup closes
+                            setTimeout(function () {
+                                $btn.removeClass('wccs-qv-added').prop('disabled', false).text('Add to Cart');
+                            }, 300);
+                        }, 1200);
                     } else {
                         $btn.removeClass('wccs-qv-loading').prop('disabled', false).text(res.data?.message || 'Error');
                     }

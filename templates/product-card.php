@@ -34,12 +34,17 @@ $badge_color = $strain_map[ $strain_slug ] ?? '#888';
             </a>
         </h3>
 
+        <!-- Hidden description for quick view popup -->
+        <div class="wccs-product-description" style="display:none;">
+            <?php echo wp_kses_post( wpautop( $product->get_short_description() ?: $product->get_description() ) ); ?>
+        </div>
+
         <div class="wccs-product-price">
             <span class="wccs-qty">1 pc</span>
             <span class="wccs-price"><?php echo $product->get_price_html(); ?></span>
         </div>
 
-        <button class="wccs-add-to-cart" 
+        <button class="wccs-add-to-cart"
                 data-product-id="<?php echo esc_attr( $product->get_id() ); ?>">
             ADD TO CART
         </button>
