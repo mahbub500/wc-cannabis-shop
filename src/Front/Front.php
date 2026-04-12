@@ -11,6 +11,8 @@ class Front {
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_assets' ] );
         add_action( 'wp_ajax_wccs_get_products', [ $this, 'ajax_get_products' ] );
         add_action( 'wp_ajax_nopriv_wccs_get_products', [ $this, 'ajax_get_products' ] );
+        add_action( 'wp_ajax_wccs_add_to_cart', [ $this, 'ajax_add_to_cart' ] );
+        add_action( 'wp_ajax_nopriv_wccs_add_to_cart', [ $this, 'ajax_add_to_cart' ] );
     }
 
     public function enqueue_assets(): void {
@@ -36,13 +38,10 @@ class Front {
         );
 
         wp_localize_script( 'wccs-script', 'wccs', [
-            'ajax_url' => admin_url( 'admin-ajax.php' ),
-            'nonce'    => wp_create_nonce( 'wccs_add_to_cart' ),
+            'ajax_url'  => admin_url( 'admin-ajax.php' ),
+            'nonce'     => wp_create_nonce( 'wccs_nonce' ),
+            'cart_nonce' => wp_create_nonce( 'wccs_add_to_cart' ),
         ] );
-
-        // wp_localize_script( 'wccs-quickview', 'wccsQV', [
-        //     'nonce' => wp_create_nonce('wccs_add_to_cart'),
-        // ]);
     }
 
     public function render_shortcode( array $atts ): string {
@@ -84,5 +83,42 @@ class Front {
             'html'  => $html,
             'total' => $query->get_total(),
         ] );
+    }
+
+    public function ajax_add_to_cart(): void {
+        check_ajax_referer( 'wccs_add_to_cart', 'nonce' );
+
+        $product_id = absint( $_POST['product_id'] ?? 0 );
+        $quantity   = absint( $_POST['quantity'] ?? 1 );
+
+        if ( ! $product_id ) {
+            wp_send_json_error( [ 'message' => 'Invalid product.' ] );
+        }
+
+        $product = wc_get_product( $product_id );
+        if ( ! $product ) {
+            wp_send_json_error( [ 'message' => 'Product not found.' ] );
+        }
+
+        // Add to cart
+        $cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity );
+
+        if ( $cart_item_key ) {
+            // Get updated cart fragments
+            ob_start();
+            woocommerce_mini_cart();
+            $mini_cart = ob_get_clean();
+
+            wp_send_json_success( [
+                'cart_item_key' => $cart_item_key,
+                'fragments'     => [
+                    '.widget_shopping_cart_content' => '<div class="widget_shopping_cart_content">' . $mini_cart . '</div>',
+                ],
+                'cart_count'    => WC()->cart->get_cart_contents_count(),
+                'cart_total'    => WC()->cart->get_cart_total(),
+            ] );
+        }
+
+        wp_send_json_error( [ 'message' => 'Failed to add to cart.' ] );
     }
 }

@@ -238,46 +238,63 @@
         const btn = e.target.closest( '.wccs-add-to-cart' );
         if ( ! btn ) return;
 
+        e.preventDefault();
+        e.stopPropagation();
+
+        const originalText = btn.textContent;
         btn.disabled    = true;
         btn.textContent = 'Adding…';
 
         const body = new URLSearchParams( {
-            action     : 'woocommerce_ajax_add_to_cart',
+            action     : 'wccs_add_to_cart',
             product_id : btn.dataset.productId,
             quantity   : 1,
+            nonce      : wccs.cart_nonce,
         } );
 
         try {
             const res  = await fetch( wccs.ajax_url, { method: 'POST', body } );
             const data = await res.json();
 
-            if ( data.error ) {
-                btn.textContent = data.error;
-            } else {
+            if ( data.success ) {
                 btn.textContent = '✓ Added!';
-                // Trigger WC cart fragments refresh
+                
+                // Update cart count/total if available
+                if ( data.data.cart_count ) {
+                    const cartCountEls = document.querySelectorAll( '.cart-count, .count' );
+                    cartCountEls.forEach( el => {
+                        el.textContent = data.data.cart_count;
+                    } );
+                }
+
+                // Trigger WooCommerce cart fragments refresh
                 if ( typeof jQuery !== 'undefined' ) {
                     jQuery( document.body ).trigger( 'wc_fragment_refresh' );
+                    jQuery( document.body ).trigger( 'added_to_cart' );
                 }
                 document.body.dispatchEvent( new CustomEvent( 'wc_fragment_refresh' ) );
+                document.body.dispatchEvent( new CustomEvent( 'added_to_cart' ) );
 
                 // Update cart fragments from response
-                if ( data.fragments ) {
-                    Object.keys( data.fragments ).forEach( selector => {
+                if ( data.data.fragments ) {
+                    Object.keys( data.data.fragments ).forEach( selector => {
                         const el = document.querySelector( selector );
                         if ( el ) {
-                            el.outerHTML = data.fragments[ selector ];
+                            el.outerHTML = data.data.fragments[ selector ];
                         }
                     } );
                 }
+            } else {
+                btn.textContent = data.data?.message || 'Error';
             }
-        } catch {
+        } catch ( err ) {
+            console.error( 'WCCS add to cart error', err );
             btn.textContent = 'Error';
         }
 
         setTimeout( () => {
             btn.disabled    = false;
-            btn.textContent = 'ADD TO CART';
+            btn.textContent = originalText;
         }, 2000 );
     } );
 
@@ -382,28 +399,31 @@
             $btn.addClass('wccs-qv-loading').prop('disabled', true).text('Adding…');
 
             $.ajax({
-                url: wc_add_to_cart_params.ajax_url,
+                url: wccs.ajax_url,
                 type: 'POST',
                 data: {
                     action:     'wccs_add_to_cart',
                     product_id: productId,
                     quantity:   qty,
-                    nonce:      wccs.nonce,
+                    nonce:      wccs.cart_nonce,
                 },
                 success: function (res) {
                     if (res.success) {
                         $btn.removeClass('wccs-qv-loading').addClass('wccs-qv-added').text('✓ Added!');
+                        
                         // Trigger WooCommerce cart fragment refresh
                         $(document.body).trigger('wc_fragment_refresh');
+                        $(document.body).trigger('added_to_cart');
+                        
                         setTimeout(function () {
                             $btn.removeClass('wccs-qv-added').prop('disabled', false).text('Add to Cart');
                         }, 2000);
                     } else {
-                        $btn.removeClass('wccs-qv-loading').prop('disabled', false).text('Add to Cart');
+                        $btn.removeClass('wccs-qv-loading').prop('disabled', false).text(res.data?.message || 'Error');
                     }
                 },
                 error: function () {
-                    $btn.removeClass('wccs-qv-loading').prop('disabled', false).text('Add to Cart');
+                    $btn.removeClass('wccs-qv-loading').prop('disabled', false).text('Error');
                 }
             });
         });
