@@ -24,6 +24,7 @@
         per_page   : parseInt( shop.dataset.perPage, 10 ) || 12,
         sale_only  : false,
         price      : [],
+        potency    : 'all',
     };
 
     let debounceTimer = null;
@@ -48,15 +49,20 @@
         noResult.style.display = 'none';
 
         const body = new URLSearchParams( {
-            action    : 'wccs_get_products',
-            nonce     : wccs.nonce,
-            category  : state.category,
-            strain    : state.strain,
-            search    : state.search,
-            per_page  : state.per_page,
-            paged     : state.paged,
-            sale_only : state.sale_only ? '1' : '0',
-            price     : state.price.join( ',' ),
+            action            : 'wccs_get_products',
+            nonce             : wccs.nonce,
+            category          : state.category,
+            strain            : state.strain,
+            search            : state.search,
+            per_page          : state.per_page,
+            paged             : state.paged,
+            sale_only         : state.sale_only ? '1' : '0',
+            price             : state.price.join( ',' ),
+            potency_unit      : potencyUnit,
+            potency_thc_min   : state.potency_thc_min ?? 0,
+            potency_thc_max   : state.potency_thc_max ?? 100,
+            potency_cbd_min   : state.potency_cbd_min ?? 0,
+            potency_cbd_max   : state.potency_cbd_max ?? 100,
         } );
 
         try {
@@ -118,16 +124,110 @@
         } );
     } );
 
-    /* ---- Potency buttons (single select) ---- */
+    /* ---- Potency type switch (% / mg) ---- */
 
-    shop.querySelectorAll( '.wccs-potency-btn' ).forEach( btn => {
+    let potencyUnit = '%';
+
+    shop.querySelectorAll( '.wccs-potency-type-btn' ).forEach( btn => {
         btn.addEventListener( 'click', () => {
-            shop.querySelectorAll( '.wccs-potency-btn' ).forEach( b => b.classList.remove( 'active' ) );
+            shop.querySelectorAll( '.wccs-potency-type-btn' ).forEach( b => b.classList.remove( 'active' ) );
             btn.classList.add( 'active' );
-            // potency filter — extend ProductQuery as needed
+            potencyUnit = btn.dataset.type;
+
+            // Update slider labels
+            shop.querySelectorAll( '.wccs-range-slider' ).forEach( slider => {
+                const unitLabel = potencyUnit === 'mg' ? 'mg' : '%';
+                slider.querySelector( '.wccs-range-value-min' ).textContent = slider.querySelector( '.wccs-range-input-min' ).value + unitLabel;
+                slider.querySelector( '.wccs-range-value-max' ).textContent = slider.querySelector( '.wccs-range-input-max' ).value + unitLabel;
+            } );
+
             resetPage();
             fetchProducts();
         } );
+    } );
+
+    /* ---- Dual Range Sliders ---- */
+
+    function initRangeSlider( sliderEl ) {
+        const track    = sliderEl.querySelector( '.wccs-range-track' );
+        const fill     = sliderEl.querySelector( '.wccs-range-fill' );
+        const thumbMin = sliderEl.querySelector( '.wccs-range-min' );
+        const thumbMax = sliderEl.querySelector( '.wccs-range-max' );
+        const valMin   = sliderEl.querySelector( '.wccs-range-value-min' );
+        const valMax   = sliderEl.querySelector( '.wccs-range-value-max' );
+        const inputMin = sliderEl.querySelector( '.wccs-range-input-min' );
+        const inputMax = sliderEl.querySelector( '.wccs-range-input-max' );
+
+        let minVal = 0, maxVal = 100;
+        let dragging = null;
+
+        function updateUI() {
+            const unitLabel = potencyUnit === 'mg' ? 'mg' : '%';
+            const minPct = minVal;
+            const maxPct = maxVal;
+
+            fill.style.left   = minPct + '%';
+            fill.style.width  = ( maxPct - minPct ) + '%';
+            thumbMin.style.left = minPct + '%';
+            thumbMax.style.left = maxPct + '%';
+            valMin.textContent = minVal + unitLabel;
+            valMax.textContent = maxVal + unitLabel;
+            valMin.style.left  = minPct + '%';
+            valMax.style.left  = maxPct + '%';
+
+            inputMin.value = minVal;
+            inputMax.value = maxVal;
+        }
+
+        function pctFromX( clientX ) {
+            const rect = track.getBoundingClientRect();
+            let pct = ( ( clientX - rect.left ) / rect.width ) * 100;
+            return Math.round( Math.max( 0, Math.min( 100, pct ) ) );
+        }
+
+        function onPointerDown( e ) {
+            e.preventDefault();
+            dragging = e.target.dataset.thumb;
+            document.addEventListener( 'pointermove', onPointerMove );
+            document.addEventListener( 'pointerup', onPointerUp );
+        }
+
+        function onPointerMove( e ) {
+            if ( ! dragging ) return;
+            const newVal = pctFromX( e.clientX );
+
+            if ( dragging === 'min' ) {
+                minVal = Math.min( newVal, maxVal );
+            } else {
+                maxVal = Math.max( newVal, minVal );
+            }
+            updateUI();
+        }
+
+        function onPointerUp() {
+            dragging = null;
+            document.removeEventListener( 'pointermove', onPointerMove );
+            document.removeEventListener( 'pointerup', onPointerUp );
+
+            // Debounce fetch
+            clearTimeout( debounceTimer );
+            debounceTimer = setTimeout( () => {
+                const field = sliderEl.dataset.field;
+                state[ 'potency_' + field + '_min' ] = minVal;
+                state[ 'potency_' + field + '_max' ] = maxVal;
+                resetPage();
+                fetchProducts();
+            }, 300 );
+        }
+
+        thumbMin.addEventListener( 'pointerdown', onPointerDown );
+        thumbMax.addEventListener( 'pointerdown', onPointerDown );
+
+        updateUI();
+    }
+
+    shop.querySelectorAll( '.wccs-range-slider' ).forEach( slider => {
+        initRangeSlider( slider );
     } );
 
     /* ---- Sale Only (10% off edibles) ---- */
@@ -203,11 +303,16 @@
     /* ---- Clear All Filters ---- */
 
     function resetAllFilters() {
-        state.category = '';
-        state.strain   = '';
-        state.search   = '';
-        state.sale_only = false;
-        state.price    = [];
+        state.category   = '';
+        state.strain     = '';
+        state.search     = '';
+        state.sale_only  = false;
+        state.price      = [];
+        state.potency_thc_min = 0;
+        state.potency_thc_max = 100;
+        state.potency_cbd_min = 0;
+        state.potency_cbd_max = 100;
+        potencyUnit      = '%';
 
         searchInput.value = '';
         searchClear.classList.remove( 'visible' );
@@ -215,8 +320,29 @@
         shop.querySelectorAll( '.wccs-cat-icon' ).forEach( b => b.classList.remove( 'active' ) );
         shop.querySelectorAll( '.wccs-strain-btn' ).forEach( b => b.classList.remove( 'active' ) );
         shop.querySelectorAll( '.wccs-price-checkbox input' ).forEach( cb => cb.checked = false );
+        shop.querySelectorAll( '.wccs-potency-type-btn' ).forEach( b => b.classList.remove( 'active' ) );
+        shop.querySelector( '.wccs-potency-type-btn[data-type="%"]' )?.classList.add( 'active' );
 
         if ( saleCheckbox ) saleCheckbox.checked = false;
+
+        // Reset sliders (update values without re-binding events)
+        shop.querySelectorAll( '.wccs-range-slider' ).forEach( slider => {
+            slider.querySelector( '.wccs-range-input-min' ).value = 0;
+            slider.querySelector( '.wccs-range-input-max' ).value = 100;
+            const fill     = slider.querySelector( '.wccs-range-fill' );
+            const thumbMin = slider.querySelector( '.wccs-range-min' );
+            const thumbMax = slider.querySelector( '.wccs-range-max' );
+            const valMin   = slider.querySelector( '.wccs-range-value-min' );
+            const valMax   = slider.querySelector( '.wccs-range-value-max' );
+            fill.style.left   = '0%';
+            fill.style.width  = '100%';
+            thumbMin.style.left = '0%';
+            thumbMax.style.left = '100%';
+            valMin.textContent = '0%';
+            valMax.textContent = '100%';
+            valMin.style.left  = '0%';
+            valMax.style.left  = '100%';
+        } );
 
         resetPage();
         fetchProducts();

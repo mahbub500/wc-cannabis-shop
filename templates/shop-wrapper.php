@@ -115,10 +115,41 @@
         <!-- Potency -->
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">POTENCY</div>
-            <div class="wccs-potency-buttons">
-                <button class="wccs-potency-btn active" data-potency="all">All</button>
-                <button class="wccs-potency-btn" data-potency="%">%</button>
-                <button class="wccs-potency-btn" data-potency="mg">mg</button>
+            <div class="wccs-potency-type-switch">
+                <button class="wccs-potency-type-btn active" data-type="%">%</button>
+                <button class="wccs-potency-type-btn" data-type="mg">mg</button>
+            </div>
+
+            <!-- THC Slider -->
+            <div class="wccs-potency-slider">
+                <div class="wccs-potency-label">THC</div>
+                <div class="wccs-range-slider" data-field="thc" data-unit="%">
+                    <div class="wccs-range-track">
+                        <div class="wccs-range-fill"></div>
+                    </div>
+                    <div class="wccs-range-thumb wccs-range-min" data-thumb="min"></div>
+                    <div class="wccs-range-thumb wccs-range-max" data-thumb="max"></div>
+                    <div class="wccs-range-value wccs-range-value-min">0%</div>
+                    <div class="wccs-range-value wccs-range-value-max">100%</div>
+                    <input type="hidden" class="wccs-range-input-min" value="0">
+                    <input type="hidden" class="wccs-range-input-max" value="100">
+                </div>
+            </div>
+
+            <!-- CBD Slider -->
+            <div class="wccs-potency-slider">
+                <div class="wccs-potency-label">CBD</div>
+                <div class="wccs-range-slider" data-field="cbd" data-unit="%">
+                    <div class="wccs-range-track">
+                        <div class="wccs-range-fill"></div>
+                    </div>
+                    <div class="wccs-range-thumb wccs-range-min" data-thumb="min"></div>
+                    <div class="wccs-range-thumb wccs-range-max" data-thumb="max"></div>
+                    <div class="wccs-range-value wccs-range-value-min">0%</div>
+                    <div class="wccs-range-value wccs-range-value-max">100%</div>
+                    <input type="hidden" class="wccs-range-input-min" value="0">
+                    <input type="hidden" class="wccs-range-input-max" value="100">
+                </div>
             </div>
         </div>
 

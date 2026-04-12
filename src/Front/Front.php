@@ -59,13 +59,18 @@ class Front {
         check_ajax_referer( 'wccs_nonce', 'nonce' );
 
         $filters = [
-            'category'    => sanitize_text_field( $_POST['category'] ?? '' ),
-            'strain'      => sanitize_text_field( $_POST['strain'] ?? '' ),
-            'search'      => sanitize_text_field( $_POST['search'] ?? '' ),
-            'per_page'    => absint( $_POST['per_page'] ?? 12 ),
-            'paged'       => absint( $_POST['paged'] ?? 1 ),
-            'sale_only'   => ! empty( $_POST['sale_only'] ),
-            'price'       => sanitize_text_field( $_POST['price'] ?? '' ),
+            'category'        => sanitize_text_field( $_POST['category'] ?? '' ),
+            'strain'          => sanitize_text_field( $_POST['strain'] ?? '' ),
+            'search'          => sanitize_text_field( $_POST['search'] ?? '' ),
+            'per_page'        => absint( $_POST['per_page'] ?? 12 ),
+            'paged'           => absint( $_POST['paged'] ?? 1 ),
+            'sale_only'       => ! empty( $_POST['sale_only'] ),
+            'price'           => sanitize_text_field( $_POST['price'] ?? '' ),
+            'potency_unit'    => sanitize_text_field( $_POST['potency_unit'] ?? '%' ),
+            'potency_thc_min' => absint( $_POST['potency_thc_min'] ?? 0 ),
+            'potency_thc_max' => absint( $_POST['potency_thc_max'] ?? 100 ),
+            'potency_cbd_min' => absint( $_POST['potency_cbd_min'] ?? 0 ),
+            'potency_cbd_max' => absint( $_POST['potency_cbd_max'] ?? 100 ),
         ];
 
         $query    = new ProductQuery( $filters );

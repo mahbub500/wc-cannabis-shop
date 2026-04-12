@@ -53,6 +53,35 @@ class ProductQuery {
             ];
         }
 
+        // Potency filter (THC / CBD range sliders)
+        $thc_min = $this->filters['potency_thc_min'] ?? 0;
+        $thc_max = $this->filters['potency_thc_max'] ?? 100;
+        $cbd_min = $this->filters['potency_cbd_min'] ?? 0;
+        $cbd_max = $this->filters['potency_cbd_max'] ?? 100;
+        $unit    = $this->filters['potency_unit'] ?? '%';
+
+        // THC filter — only apply if not full range
+        if ( $thc_min > 0 || $thc_max < 100 ) {
+            $thc_meta_key = $unit === 'mg' ? '_wccs_thc_mg' : '_wccs_thc_pct';
+            $args['meta_query'][] = [
+                'key'     => $thc_meta_key,
+                'value'   => [ (float) $thc_min, (float) $thc_max ],
+                'type'    => 'NUMERIC',
+                'compare' => 'BETWEEN',
+            ];
+        }
+
+        // CBD filter — only apply if not full range
+        if ( $cbd_min > 0 || $cbd_max < 100 ) {
+            $cbd_meta_key = $unit === 'mg' ? '_wccs_cbd_mg' : '_wccs_cbd_pct';
+            $args['meta_query'][] = [
+                'key'     => $cbd_meta_key,
+                'value'   => [ (float) $cbd_min, (float) $cbd_max ],
+                'type'    => 'NUMERIC',
+                'compare' => 'BETWEEN',
+            ];
+        }
+
         // Price range filter
         if ( ! empty( $this->filters['price'] ) ) {
             $price_ranges = explode( ',', $this->filters['price'] );

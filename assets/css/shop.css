@@ -287,8 +287,7 @@
 }
 
 /* Strain buttons */
-.wccs-strain-buttons,
-.wccs-potency-buttons {
+.wccs-strain-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -321,6 +320,125 @@
     border-color: var(--wccs-primary);
     color: #fff;
     box-shadow: 0 2px 8px rgba(29,158,117,.28);
+}
+
+/* ── Potency Slider ── */
+.wccs-potency-type-switch {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.wccs-potency-type-btn {
+    flex: 1;
+    padding: 5px 12px;
+    border: 1px solid var(--wccs-border-md);
+    border-radius: 20px;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    color: var(--wccs-muted);
+    cursor: pointer;
+    transition: all var(--wccs-tr);
+}
+
+.wccs-potency-type-btn:hover {
+    background: var(--wccs-primary-light);
+    border-color: var(--wccs-primary-mid);
+    color: var(--wccs-primary-dark);
+}
+
+.wccs-potency-type-btn.active {
+    background: var(--wccs-primary);
+    border-color: var(--wccs-primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(29,158,117,.28);
+}
+
+.wccs-potency-slider {
+    margin-top: 14px;
+}
+
+.wccs-potency-slider:first-of-type { margin-top: 0; }
+
+.wccs-potency-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--wccs-muted);
+    margin-bottom: 10px;
+}
+
+.wccs-range-slider {
+    position: relative;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+}
+
+.wccs-range-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--wccs-surface-2);
+    border-radius: 2px;
+}
+
+.wccs-range-fill {
+    height: 100%;
+    background: var(--wccs-primary);
+    border-radius: 2px;
+    transition: none;
+}
+
+.wccs-range-thumb {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid var(--wccs-primary);
+    border-radius: 50%;
+    cursor: grab;
+    z-index: 2;
+    transition: box-shadow var(--wccs-tr), transform var(--wccs-tr);
+    transform: translate(-50%, -50%);
+    top: 50%;
+}
+
+.wccs-range-thumb:hover {
+    box-shadow: 0 2px 8px rgba(29,158,117,.3);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.wccs-range-thumb:active { cursor: grabbing; }
+
+.wccs-range-value {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--wccs-muted);
+    top: 4px;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.wccs-range-value-min { left: 0; }
+.wccs-range-value-max { right: 0; }
+
+/* ── Potency Slider Dark ── */
+@media (prefers-color-scheme: dark) {
+    .wccs-range-track { background: #2e312b; }
+    .wccs-range-thumb { background: #23261f; border-color: #5DCAA5; }
+    .wccs-range-thumb:hover { box-shadow: 0 2px 8px rgba(93,202,165,.25); }
+}
+
+/* ── Potency Slider Responsive ── */
+@media (max-width: 860px) {
+    .wccs-range-slider { height: 32px; }
+    .wccs-range-thumb { width: 14px; height: 14px; }
 }
 
 /* Strain-specific active colors */
