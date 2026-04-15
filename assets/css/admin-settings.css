@@ -1,9 +1,9 @@
-
 /* =========================================================
    WC Cannabis Shop — Admin Settings Styles
-   ========================================================= */
+   assets/css/admin-settings.css
+========================================================= */
 
-/* ---------- Tab Nav ---------- */
+/* ── Tab Nav ───────────────────────────────────────────── */
 .wccs-tab-nav {
     display: flex;
     gap: 0;
@@ -12,8 +12,8 @@
 }
 
 .wccs-tab-btn {
-    padding: 10px 24px;
-    font-size: 14px;
+    padding: 10px 22px;
+    font-size: 13.5px;
     font-weight: 600;
     color: #3c3c3c;
     background: #f0f4f0;
@@ -21,10 +21,12 @@
     border-bottom: none;
     cursor: pointer;
     border-radius: 6px 6px 0 0;
-    transition: background .18s, color .18s;
-    letter-spacing: .01em;
+    transition: background .16s, color .16s;
     position: relative;
     bottom: -2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .wccs-tab-btn:hover {
@@ -40,7 +42,26 @@
     z-index: 1;
 }
 
-/* ---------- Tab Panels ---------- */
+.wccs-slot-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #2d6a2d;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.wccs-tab-btn.wccs-tab-active .wccs-slot-count {
+    background: #2d6a2d;
+}
+
+/* ── Tab Panels ─────────────────────────────────────────── */
 .wccs-tab-panel {
     display: none;
     padding: 24px 0 0;
@@ -50,9 +71,124 @@
     display: block;
 }
 
-/* ---------- Slots List (Tab 2) ---------- */
+/* ── Map ─────────────────────────────────────────────────── */
+#wccs-map {
+    height: 320px;
+    margin-top: 12px;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    background: #eee;
+}
+
+/* ── Location inputs ──────────────────────────────────────── */
+.wccs-settings-page .form-table th {
+    width: 160px;
+    font-weight: 600;
+}
+
+.wccs-location-wrap {
+    max-width: 620px;
+}
+
+.wccs-location-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.wccs-location-inputs input.regular-text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.wccs-location-details {
+    margin-top: 8px;
+}
+
+.wccs-selected-location {
+    font-size: 13px;
+    color: #2d6a2d;
+    font-style: italic;
+    margin: 4px 0 0;
+}
+
+/* ── Time Slots (Tab 1 builder) ──────────────────────────── */
+.wccs-time-slots-wrap {
+    max-width: 620px;
+}
+
+.wccs-add-time-slot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8ede8;
+}
+
+.wccs-to-label {
+    font-size: 13px;
+    color: #646970;
+}
+
+.wccs-time-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f5f6f4;
+    border: 1px solid #e0e8e0;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.wccs-slot-display {
+    flex: 1;
+    font-size: 13px;
+    color: #3c3c3c;
+}
+
+.wccs-remove-slot-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: #f0f0f1;
+    color: #646970;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .14s, color .14s;
+    flex-shrink: 0;
+}
+
+.wccs-remove-slot-btn:hover {
+    background: #E24B4A;
+    color: #fff;
+}
+
+/* ── Tab 2: Slots table ──────────────────────────────────── */
 .wccs-slots-table-wrap {
     max-width: 680px;
+}
+
+.wccs-slots-intro {
+    margin-bottom: 14px;
+    color: #646970;
+    font-size: 13px;
+}
+
+.wccs-slots-empty {
+    color: #9aa59a;
+    font-style: italic;
+    font-size: 13px;
+    padding: 8px 0;
 }
 
 .wccs-slots-table {
@@ -75,14 +211,14 @@
     padding: 11px 16px;
     text-align: left;
     font-weight: 600;
-    letter-spacing: .03em;
-    font-size: 12px;
+    letter-spacing: .04em;
+    font-size: 11.5px;
     text-transform: uppercase;
 }
 
 .wccs-slots-table tbody tr {
     border-bottom: 1px solid #eef2ee;
-    transition: background .12s;
+    transition: background .1s;
 }
 
 .wccs-slots-table tbody tr:last-child {
@@ -100,7 +236,7 @@
 
 .wccs-slot-badge {
     display: inline-block;
-    padding: 3px 10px;
+    padding: 3px 11px;
     border-radius: 20px;
     background: #e7f3e7;
     color: #2d6a2d;
@@ -111,92 +247,11 @@
 .wccs-slot-time {
     font-variant-numeric: tabular-nums;
     color: #444;
-}
-
-.wccs-slots-empty {
-    color: #9aa59a;
-    font-style: italic;
-    padding: 18px 0 8px;
     font-size: 13px;
 }
 
-/* ---------- Existing styles (preserved + extended) ---------- */
-.wccs-settings-page .form-table th {
-    width: 160px;
-    font-weight: 600;
-}
-
-.wccs-location-wrap {
-    max-width: 600px;
-}
-
-.wccs-location-inputs {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.wccs-location-inputs input {
-    flex: 1;
-}
-
-.wccs-location-details {
-    margin-top: 8px;
-}
-
-.wccs-selected-location {
-    font-size: 13px;
-    color: #646970;
-    font-style: italic;
-}
-
-.wccs-time-slots-wrap {
-    max-width: 600px;
-}
-
-.wccs-add-time-slot {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e8ede8;
-}
-
-.wccs-time-slot {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #f5f6f4;
-    border: 1px solid #e8ede8;
-    border-radius: 6px;
-    margin-bottom: 6px;
-}
-
-.wccs-slot-display {
-    flex: 1;
-    font-size: 13px;
-}
-
-.wccs-remove-slot-btn {
-    width: 24px;
-    height: 24px;
-    border: none;
-    background: #f0f0f1;
-    color: #646970;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all .15s;
-}
-
-.wccs-remove-slot-btn:hover {
-    background: #E24B4A;
-    color: #fff;
+/* ── Save notice position fix ─────────────────────────────── */
+.wccs-settings-page #wccs-save-notice,
+.wccs-settings-page #wccs-save-error {
+    margin-top: 12px;
 }

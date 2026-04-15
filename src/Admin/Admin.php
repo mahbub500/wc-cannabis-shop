@@ -7,22 +7,92 @@ class Admin {
     private const OPTION_KEY    = 'wccs_settings';
 
     public function init(): void {
-        add_action( 'admin_menu',        [ $this, 'add_menu' ] );
-        add_action( 'add_meta_boxes',    [ $this, 'add_sale_meta_box' ] );
-        add_action( 'save_post_product', [ $this, 'save_sale_meta' ] );
-        add_action( 'admin_init',        [ $this, 'register_settings' ] );
+        add_action( 'admin_menu',            [ $this, 'add_menu' ] );
+        add_action( 'add_meta_boxes',        [ $this, 'add_sale_meta_box' ] );
+        add_action( 'save_post_product',     [ $this, 'save_sale_meta' ] );
+        add_action( 'admin_init',            [ $this, 'register_settings' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+        add_action( 'wp_ajax_wccs_save_settings', [ $this, 'ajax_save_settings' ] );
     }
 
     /* =========================================================
-       Enqueue CSS + JS on our settings page only
+       Register setting with sanitize callback
+       (prevents WordPress from stripping the nested array)
+    ========================================================= */
+    public function register_settings(): void {
+        register_setting(
+            'wccs_settings_group',
+            self::OPTION_KEY,
+            [
+                'sanitize_callback' => [ $this, 'sanitize_options' ],
+                'default'           => [
+                    'title'      => '',
+                    'location'   => '',
+                    'latitude'   => '',
+                    'longitude'  => '',
+                    'time_slots' => [],
+                ],
+            ]
+        );
+    }
+
+    public function sanitize_options( $input ): array {
+        $clean = [];
+        $clean['title']     = sanitize_text_field( $input['title']     ?? '' );
+        $clean['location']  = sanitize_text_field( $input['location']  ?? '' );
+        $clean['latitude']  = sanitize_text_field( $input['latitude']  ?? '' );
+        $clean['longitude'] = sanitize_text_field( $input['longitude'] ?? '' );
+
+        $clean['time_slots'] = [];
+        if ( ! empty( $input['time_slots'] ) && is_array( $input['time_slots'] ) ) {
+            foreach ( array_values( $input['time_slots'] ) as $slot ) {
+                if ( empty( $slot['label'] ) && empty( $slot['start'] ) ) {
+                    continue;
+                }
+                $clean['time_slots'][] = [
+                    'label' => sanitize_text_field( $slot['label'] ?? '' ),
+                    'start' => sanitize_text_field( $slot['start'] ?? '' ),
+                    'end'   => sanitize_text_field( $slot['end']   ?? '' ),
+                ];
+            }
+        }
+
+        return $clean;
+    }
+
+    /* =========================================================
+       AJAX Save — form submits here via jQuery so the page
+       stays on the same tab and no redirect happens
+    ========================================================= */
+    public function ajax_save_settings(): void {
+        check_ajax_referer( 'wccs_ajax_nonce', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'message' => 'Permission denied.' ], 403 );
+        }
+
+        $raw = [];
+        parse_str( $_POST['form_data'] ?? '', $raw );
+
+        $input = $raw[ self::OPTION_KEY ] ?? [];
+        $clean = $this->sanitize_options( $input );
+
+        update_option( self::OPTION_KEY, $clean );
+
+        wp_send_json_success( [
+            'message'    => 'Settings saved successfully.',
+            'time_slots' => $clean['time_slots'],
+        ] );
+    }
+
+    /* =========================================================
+       Enqueue assets — our page only
     ========================================================= */
     public function enqueue_admin_assets( string $hook ): void {
         if ( $hook !== 'toplevel_page_wccs-settings' ) {
             return;
         }
 
-        // Leaflet
         wp_enqueue_style(
             'wccs-leaflet-css',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -37,7 +107,6 @@ class Admin {
             true
         );
 
-        // Our own CSS (assets/css/admin-settings.css)
         wp_enqueue_style(
             'wccs-admin-css',
             WCCS_URL . 'assets/css/admin-settings.css',
@@ -45,16 +114,37 @@ class Admin {
             WCCS_VERSION
         );
 
-        // Our own JS (assets/js/admin-settings.js) — replaces old admin-map.js
+        // Depends on WordPress-bundled jQuery + Leaflet
         wp_enqueue_script(
             'wccs-admin-js',
             WCCS_URL . 'assets/js/admin-settings.js',
-            [ 'wccs-leaflet-js' ],
+            [ 'jquery', 'wccs-leaflet-js' ],
             WCCS_VERSION,
             true
         );
+
+        $options = get_option( self::OPTION_KEY, [
+            'title'      => '',
+            'location'   => '',
+            'latitude'   => '',
+            'longitude'  => '',
+            'time_slots' => [],
+        ] );
+
+        // All PHP data available to JS as wccsData global
+        wp_localize_script( 'wccs-admin-js', 'wccsData', [
+            'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+            'nonce'       => wp_create_nonce( 'wccs_ajax_nonce' ),
+            'lat'         => $options['latitude']  ?: '23.8103',
+            'lng'         => $options['longitude'] ?: '90.4125',
+            'hasLocation' => ! empty( $options['location'] ),
+            'timeSlots'   => array_values( $options['time_slots'] ?? [] ),
+        ] );
     }
 
+    /* =========================================================
+       Admin Menu
+    ========================================================= */
     public function add_menu(): void {
         add_menu_page(
             'WC Cannabis Shop',
@@ -67,12 +157,8 @@ class Admin {
         );
     }
 
-    public function register_settings(): void {
-        register_setting( 'wccs_settings_group', self::OPTION_KEY );
-    }
-
     /* =========================================================
-       Settings Page (tabbed)
+       Settings Page HTML
     ========================================================= */
     public function render_settings(): void {
         $options = get_option( self::OPTION_KEY, [
@@ -83,49 +169,37 @@ class Admin {
             'time_slots' => [],
         ] );
 
-        // Pass map seed data before our JS file loads
+        $slots = array_values( $options['time_slots'] ?? [] );
         ?>
-        <script>
-        window.wccsMapData = {
-            lat: <?php echo $options['latitude'] ? esc_js( $options['latitude'] ) : '23.8103'; ?>,
-            lng: <?php echo $options['longitude'] ? esc_js( $options['longitude'] ) : '90.4125'; ?>,
-            hasLocation: <?php echo $options['location'] ? 'true' : 'false'; ?>,
-        };
-        </script>
 
         <div class="wrap wccs-settings-page">
             <h1>WC Cannabis Shop Settings</h1>
 
+            <!-- JS-driven notices -->
+            <div id="wccs-save-notice" class="notice notice-success is-dismissible" style="display:none;">
+                <p><strong>Settings saved successfully.</strong></p>
+            </div>
+            <div id="wccs-save-error" class="notice notice-error is-dismissible" style="display:none;">
+                <p id="wccs-save-error-msg"><strong>Error saving settings.</strong></p>
+            </div>
+
             <!-- ── Tab Navigation ── -->
             <nav class="wccs-tab-nav" role="tablist">
-                <button type="button"
-                        class="wccs-tab-btn wccs-tab-active"
-                        data-tab="settings"
-                        role="tab"
-                        aria-controls="wccs-panel-settings"
-                        aria-selected="true">
+                <button type="button" class="wccs-tab-btn wccs-tab-active" data-tab="settings" role="tab" aria-selected="true">
                     ⚙️ Settings
                 </button>
-                <button type="button"
-                        class="wccs-tab-btn"
-                        data-tab="slots"
-                        role="tab"
-                        aria-controls="wccs-panel-slots"
-                        aria-selected="false">
+                <button type="button" class="wccs-tab-btn" data-tab="slots" role="tab" aria-selected="false">
                     🕐 All Time Slots
+                    <span class="wccs-slot-count" id="wccs-slot-count"><?php echo count( $slots ); ?></span>
                 </button>
             </nav>
 
             <!-- ══════════════════════════════════════════════
-                 TAB 1 — Settings (form)
+                 TAB 1 — Settings Form
             ══════════════════════════════════════════════ -->
-            <div id="wccs-panel-settings"
-                 class="wccs-tab-panel wccs-panel-active"
-                 role="tabpanel"
-                 aria-labelledby="wccs-tab-settings">
+            <div id="wccs-panel-settings" class="wccs-tab-panel wccs-panel-active">
 
-                <form method="post" action="options.php">
-                    <?php settings_fields( 'wccs_settings_group' ); ?>
+                <form id="wccs-settings-form">
 
                     <!-- Shop Title -->
                     <table class="form-table" role="presentation">
@@ -143,7 +217,7 @@ class Admin {
                         </tr>
                     </table>
 
-                    <!-- Store Location with Map -->
+                    <!-- Store Location -->
                     <table class="form-table" role="presentation">
                         <tr>
                             <th><label>Store Location</label></th>
@@ -155,29 +229,22 @@ class Admin {
                                                name="<?php echo self::OPTION_KEY; ?>[location]"
                                                value="<?php echo esc_attr( $options['location'] ?? '' ); ?>"
                                                class="regular-text"
-                                               placeholder="Search for a location (address or place name)"
+                                               placeholder="Search for an address or place name"
                                                autocomplete="off">
-                                        <button type="button" class="button wccs-search-location-btn" id="wccs-search-location-btn">
-                                            Search
-                                        </button>
+                                        <button type="button" class="button" id="wccs-search-location-btn">🔍 Search</button>
+                                        <button type="button" class="button" id="wccs-current-location-btn" title="Use my current location">📍 My Location</button>
                                     </div>
-                                    <div class="wccs-location-details" id="wccs-location-details">
-                                        <input type="hidden"
-                                               id="wccs_latitude"
-                                               name="<?php echo self::OPTION_KEY; ?>[latitude]"
-                                               value="<?php echo esc_attr( $options['latitude'] ?? '' ); ?>">
-                                        <input type="hidden"
-                                               id="wccs_longitude"
-                                               name="<?php echo self::OPTION_KEY; ?>[longitude]"
-                                               value="<?php echo esc_attr( $options['longitude'] ?? '' ); ?>">
+                                    <div class="wccs-location-details">
+                                        <input type="hidden" id="wccs_latitude"  name="<?php echo self::OPTION_KEY; ?>[latitude]"  value="<?php echo esc_attr( $options['latitude']  ?? '' ); ?>">
+                                        <input type="hidden" id="wccs_longitude" name="<?php echo self::OPTION_KEY; ?>[longitude]" value="<?php echo esc_attr( $options['longitude'] ?? '' ); ?>">
                                         <p class="wccs-selected-location" id="wccs-selected-location">
-                                            <?php echo $options['location']
-                                                ? 'Selected: ' . esc_html( $options['location'] )
-                                                : 'Click on the map or search to set location'; ?>
+                                            <?php echo ! empty( $options['location'] )
+                                                ? '📍 ' . esc_html( $options['location'] )
+                                                : 'Click the map, drag the pin, search, or use My Location.'; ?>
                                         </p>
                                     </div>
-                                    <div id="wccs-map" style="height:300px; margin-top:12px; border:1px solid #ccd0d4; border-radius:4px;"></div>
-                                    <p class="description">Click on the map to set your store location, or search above.</p>
+                                    <div id="wccs-map"></div>
+                                    <p class="description">Drag the pin or click anywhere on the map to set coordinates. The address field updates automatically.</p>
                                 </div>
                             </td>
                         </tr>
@@ -190,43 +257,26 @@ class Admin {
                             <td>
                                 <div class="wccs-time-slots-wrap">
                                     <div class="wccs-add-time-slot">
-                                        <input type="text"
-                                               id="wccs-slot-label"
-                                               placeholder="Label (e.g. Morning)"
-                                               class="regular-text"
-                                               style="width:200px; margin-right:8px;">
-                                        <input type="time" id="wccs-slot-start" style="margin-right:8px;">
-                                        <span style="margin:0 8px;">to</span>
-                                        <input type="time" id="wccs-slot-end" style="margin:0 8px;">
-                                        <button type="button" class="button" id="wccs-add-slot-btn">Add Slot</button>
+                                        <input type="text" id="wccs-slot-label" placeholder="Label (e.g. Morning)" style="width:180px;">
+                                        <input type="time" id="wccs-slot-start">
+                                        <span class="wccs-to-label">to</span>
+                                        <input type="time" id="wccs-slot-end">
+                                        <button type="button" class="button button-primary" id="wccs-add-slot-btn">+ Add Slot</button>
                                     </div>
 
                                     <div id="wccs-time-slots-list">
-                                        <?php
-                                        $slots = $options['time_slots'] ?? [];
-                                        if ( is_array( $slots ) ) :
-                                            foreach ( $slots as $i => $slot ) :
-                                                ?>
-                                                <div class="wccs-time-slot" data-index="<?php echo esc_attr( $i ); ?>">
-                                                    <input type="hidden"
-                                                           name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo esc_attr( $i ); ?>][label]"
-                                                           value="<?php echo esc_attr( $slot['label'] ?? '' ); ?>">
-                                                    <input type="hidden"
-                                                           name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo esc_attr( $i ); ?>][start]"
-                                                           value="<?php echo esc_attr( $slot['start'] ?? '' ); ?>">
-                                                    <input type="hidden"
-                                                           name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo esc_attr( $i ); ?>][end]"
-                                                           value="<?php echo esc_attr( $slot['end'] ?? '' ); ?>">
-                                                    <span class="wccs-slot-display">
-                                                        <strong><?php echo esc_html( $slot['label'] ?? '' ); ?></strong>
-                                                        <?php echo esc_html( $slot['start'] ?? '' ); ?> – <?php echo esc_html( $slot['end'] ?? '' ); ?>
-                                                    </span>
-                                                    <button type="button" class="wccs-remove-slot-btn" aria-label="Remove slot">×</button>
-                                                </div>
-                                                <?php
-                                            endforeach;
-                                        endif;
-                                        ?>
+                                        <?php foreach ( $slots as $i => $slot ) : ?>
+                                            <div class="wccs-time-slot" data-index="<?php echo esc_attr( $i ); ?>">
+                                                <input type="hidden" name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo $i; ?>][label]" value="<?php echo esc_attr( $slot['label'] ?? '' ); ?>">
+                                                <input type="hidden" name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo $i; ?>][start]" value="<?php echo esc_attr( $slot['start'] ?? '' ); ?>">
+                                                <input type="hidden" name="<?php echo self::OPTION_KEY; ?>[time_slots][<?php echo $i; ?>][end]"   value="<?php echo esc_attr( $slot['end']   ?? '' ); ?>">
+                                                <span class="wccs-slot-display">
+                                                    <strong><?php echo esc_html( $slot['label'] ?? '' ); ?></strong>
+                                                    &nbsp;<?php echo esc_html( $slot['start'] ?? '' ); ?> – <?php echo esc_html( $slot['end'] ?? '' ); ?>
+                                                </span>
+                                                <button type="button" class="wccs-remove-slot-btn" aria-label="Remove slot">×</button>
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
 
                                     <p class="description">Add time slots for delivery or pickup scheduling.</p>
@@ -235,63 +285,47 @@ class Admin {
                         </tr>
                     </table>
 
-                    <?php submit_button( 'Save Settings' ); ?>
+                    <p class="submit">
+                        <button type="submit" id="wccs-save-btn" class="button button-primary button-large">
+                            💾 Save Settings
+                        </button>
+                        <span id="wccs-saving-spinner" class="spinner" style="float:none;vertical-align:middle;visibility:hidden;"></span>
+                    </p>
                 </form>
+
             </div><!-- /#wccs-panel-settings -->
 
             <!-- ══════════════════════════════════════════════
-                 TAB 2 — All Time Slots (read-only list)
+                 TAB 2 — All Time Slots (live, updated on save)
             ══════════════════════════════════════════════ -->
-            <div id="wccs-panel-slots"
-                 class="wccs-tab-panel"
-                 role="tabpanel"
-                 aria-labelledby="wccs-tab-slots">
-
+            <div id="wccs-panel-slots" class="wccs-tab-panel">
                 <div class="wccs-slots-table-wrap">
-                    <p style="margin-bottom:12px;color:#646970;font-size:13px;">
-                        All currently saved delivery time slots. To add or remove slots, switch to the <strong>Settings</strong> tab.
+                    <p class="wccs-slots-intro">
+                        All saved delivery time slots. Add or remove them in the <strong>Settings</strong> tab, then hit Save.
                     </p>
 
-                    <?php $slots = $options['time_slots'] ?? []; ?>
-
-                    <?php if ( empty( $slots ) ) : ?>
+                    <div id="wccs-slots-empty-msg" <?php echo ! empty( $slots ) ? 'style="display:none"' : ''; ?>>
                         <p class="wccs-slots-empty">No time slots have been added yet.</p>
-                    <?php else : ?>
-                        <table class="wccs-slots-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Label</th>
-                                    <th>Time Range</th>
-                                </tr>
-                            </thead>
-                            <tbody id="wccs-slots-tbody">
-                                <?php foreach ( $slots as $i => $slot ) : ?>
-                                    <tr>
-                                        <td><?php echo esc_html( $i + 1 ); ?></td>
-                                        <td><span class="wccs-slot-badge"><?php echo esc_html( $slot['label'] ?? '' ); ?></span></td>
-                                        <td class="wccs-slot-time">
-                                            <?php echo esc_html( $slot['start'] ?? '' ); ?> &ndash; <?php echo esc_html( $slot['end'] ?? '' ); ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
+                    </div>
 
-                    <!-- JS will inject a tbody here if slots table isn't rendered server-side yet -->
-                    <?php if ( empty( $slots ) ) : ?>
-                        <table class="wccs-slots-table" style="display:none" id="wccs-slots-table-dynamic">
-                            <thead>
+                    <table class="wccs-slots-table" id="wccs-slots-table" <?php echo empty( $slots ) ? 'style="display:none"' : ''; ?>>
+                        <thead>
+                            <tr>
+                                <th style="width:44px">#</th>
+                                <th>Label</th>
+                                <th>Time Range</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wccs-slots-tbody">
+                            <?php foreach ( $slots as $i => $slot ) : ?>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Label</th>
-                                    <th>Time Range</th>
+                                    <td><?php echo $i + 1; ?></td>
+                                    <td><span class="wccs-slot-badge"><?php echo esc_html( $slot['label'] ?? '' ); ?></span></td>
+                                    <td class="wccs-slot-time"><?php echo esc_html( $slot['start'] ?? '' ); ?> &ndash; <?php echo esc_html( $slot['end'] ?? '' ); ?></td>
                                 </tr>
-                            </thead>
-                            <tbody id="wccs-slots-tbody"></tbody>
-                        </table>
-                    <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div><!-- /#wccs-panel-slots -->
 
@@ -335,7 +369,6 @@ class Admin {
         if ( ! current_user_can( 'edit_post', $post_id ) ) {
             return;
         }
-
         $value = isset( $_POST['wccs_sale_enabled'] ) ? '1' : '0';
         update_post_meta( $post_id, self::META_KEY_SALE, $value );
     }
