@@ -13,6 +13,12 @@ class Front {
         add_action( 'wp_ajax_nopriv_wccs_get_products', [ $this, 'ajax_get_products' ] );
         add_action( 'wp_ajax_wccs_add_to_cart', [ $this, 'ajax_add_to_cart' ] );
         add_action( 'wp_ajax_nopriv_wccs_add_to_cart', [ $this, 'ajax_add_to_cart' ] );
+        add_action( 'wp_ajax_wccs_get_cart_data', [ $this, 'ajax_get_cart_data' ] );
+        add_action( 'wp_ajax_nopriv_wccs_get_cart_data', [ $this, 'ajax_get_cart_data' ] );
+        add_action( 'wp_ajax_wccs_remove_from_cart', [ $this, 'ajax_remove_from_cart' ] );
+        add_action( 'wp_ajax_nopriv_wccs_remove_from_cart', [ $this, 'ajax_remove_from_cart' ] );
+        add_action( 'wp_ajax_wccs_update_cart_qty', [ $this, 'ajax_update_cart_qty' ] );
+        add_action( 'wp_ajax_nopriv_wccs_update_cart_qty', [ $this, 'ajax_update_cart_qty' ] );
     }
 
     public function enqueue_assets(): void {
@@ -120,5 +126,128 @@ class Front {
         }
 
         wp_send_json_error( [ 'message' => 'Failed to add to cart.' ] );
+    }
+
+    /**
+     * Get cart data via AJAX.
+     */
+    public function ajax_get_cart_data(): void {
+        check_ajax_referer( 'wccs_nonce', 'nonce' );
+
+        $cart  = WC()->cart;
+        $items = [];
+
+        foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+            $product   = $cart_item['data'];
+            $image_id  = $product->get_image_id();
+            $image_url = $image_id ? wp_get_attachment_image_url( $image_id, [48, 48] ) : wc_placeholder_img_src( [48, 48] );
+            $raw_price = wp_strip_all_tags( wc_price( $cart_item['line_total'] ) );
+
+            $items[] = [
+                'key'     => $cart_item_key,
+                'name'    => $product->get_name(),
+                'qty'     => $cart_item['quantity'],
+                'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+                'image'   => esc_url( $image_url ),
+            ];
+        }
+
+        $raw_total = wp_strip_all_tags( $cart->get_cart_total() );
+
+        wp_send_json_success( [
+            'count' => $cart->get_cart_contents_count(),
+            'total' => html_entity_decode( trim( $raw_total ), ENT_QUOTES, 'UTF-8' ),
+            'items' => $items,
+        ] );
+    }
+
+    /**
+     * Remove item from cart via AJAX.
+     */
+    public function ajax_remove_from_cart(): void {
+        check_ajax_referer( 'wccs_nonce', 'nonce' );
+
+        $cart_key = sanitize_text_field( $_POST['cart_key'] ?? '' );
+
+        if ( ! $cart_key ) {
+            wp_send_json_error( [ 'message' => 'Invalid cart key.' ] );
+        }
+
+        $removed = WC()->cart->remove_cart_item( $cart_key );
+
+        if ( $removed ) {
+            // Return updated cart data
+            $cart      = WC()->cart;
+            $raw_total = wp_strip_all_tags( $cart->get_cart_total() );
+            $items     = [];
+
+            foreach ( $cart->get_cart() as $cart_item_key => $cart_item ) {
+                $product   = $cart_item['data'];
+                $image_id  = $product->get_image_id();
+                $image_url = $image_id ? wp_get_attachment_image_url( $image_id, [48, 48] ) : wc_placeholder_img_src( [48, 48] );
+                $raw_price = wp_strip_all_tags( wc_price( $cart_item['line_total'] ) );
+
+                $items[] = [
+                    'key'     => $cart_item_key,
+                    'name'    => $product->get_name(),
+                    'qty'     => $cart_item['quantity'],
+                    'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+                    'image'   => esc_url( $image_url ),
+                ];
+            }
+
+            wp_send_json_success( [
+                'count' => $cart->get_cart_contents_count(),
+                'total' => html_entity_decode( trim( $raw_total ), ENT_QUOTES, 'UTF-8' ),
+                'items' => $items,
+            ] );
+        }
+
+        wp_send_json_error( [ 'message' => 'Failed to remove item.' ] );
+    }
+
+    /**
+     * Update cart item quantity via AJAX.
+     */
+    public function ajax_update_cart_qty(): void {
+        check_ajax_referer( 'wccs_nonce', 'nonce' );
+
+        $cart_key = sanitize_text_field( $_POST['cart_key'] ?? '' );
+        $quantity = absint( $_POST['quantity'] ?? 1 );
+
+        if ( ! $cart_key || $quantity < 1 ) {
+            wp_send_json_error( [ 'message' => 'Invalid data.' ] );
+        }
+
+        $cart = WC()->cart;
+        $updated = $cart->set_quantity( $cart_key, $quantity );
+
+        if ( $updated ) {
+            $raw_total = wp_strip_all_tags( $cart->get_cart_total() );
+            $items     = [];
+
+            foreach ( $cart->get_cart() as $item_key => $item ) {
+                $product   = $item['data'];
+                $image_id  = $product->get_image_id();
+                $image_url = $image_id ? wp_get_attachment_image_url( $image_id, [48, 48] ) : wc_placeholder_img_src( [48, 48] );
+                $raw_price = wp_strip_all_tags( wc_price( $item['line_total'] ) );
+
+                $items[] = [
+                    'key'     => $item_key,
+                    'name'    => $product->get_name(),
+                    'qty'     => $item['quantity'],
+                    'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+                    'image'   => esc_url( $image_url ),
+                ];
+            }
+
+            wp_send_json_success( [
+                'count' => $cart->get_cart_contents_count(),
+                'total' => html_entity_decode( trim( $raw_total ), ENT_QUOTES, 'UTF-8' ),
+                'items' => $items,
+            ] );
+        }
+
+        wp_send_json_error( [ 'message' => 'Failed to update quantity.' ] );
     }
 }

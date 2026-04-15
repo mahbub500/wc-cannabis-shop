@@ -165,3 +165,57 @@
         </div>
     </div>
 </div>
+
+<!-- =============================================
+     PERSISTENT CART BAR (Floating Bottom)
+============================================= -->
+<div class="wccs-cart-bar" id="wccs-cart-bar" style="display:none;">
+    <button class="wccs-cart-bar-btn" id="wccs-cart-bar-btn">
+        <div class="wccs-cart-bar-content">
+            <svg class="wccs-cart-bar-icon" viewBox="0 0 24 24" width="20" height="20" fill="none">
+                <circle cx="9" cy="21" r="1.5" fill="currentColor"/>
+                <circle cx="17" cy="21" r="1.5" fill="currentColor"/>
+                <path d="M1 1h3l1.5 9h13l1.5-9H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="wccs-cart-bar-text">
+                <span class="wccs-cart-bar-title">Cart</span>
+                <span class="wccs-cart-bar-subtitle" id="wccs-cart-bar-subtitle">0 products ($0.00)</span>
+            </div>
+        </div>
+    </button>
+</div>
+
+<!-- Cart popup panel (full sidebar) -->
+<div class="wccs-cart-popup-wrap" id="wccs-cart-popup-wrap">
+    <div class="wccs-cart-backdrop" id="wccs-cart-backdrop"></div>
+    <div class="wccs-cart-popup-inner">
+        <div class="wccs-cart-popup-header">
+            <h3 class="wccs-cart-popup-title">Your Cart</h3>
+            <button class="wccs-cart-close" id="wccs-cart-close" aria-label="Close cart">
+                <svg viewBox="0 0 16 16" width="18" height="18" fill="none">
+                    <path d="M2.343 2.343L13.657 13.657" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M13.657 2.343L2.343 13.657" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+        <div class="wccs-cart-items" id="wccs-cart-items">
+            <div class="wccs-cart-empty-state">
+                <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                    <circle cx="18" cy="42" r="3" fill="#ccc"/>
+                    <circle cx="34" cy="42" r="3" fill="#ccc"/>
+                    <path d="M2 2h6l3 18h26l3-18H10" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+        <div class="wccs-cart-footer">
+            <div class="wccs-cart-footer-info">
+                <span class="wccs-cart-footer-label">Subtotal</span>
+                <span class="wccs-cart-footer-total" id="wccs-cart-footer-total">$0.00</span>
+            </div>
+            <a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="wccs-cart-checkout-btn">
+                Checkout
+            </a>
+        </div>
+    </div>
+</div>

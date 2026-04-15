@@ -258,7 +258,7 @@
 
             if ( data.success ) {
                 btn.textContent = '✓ Added!';
-                
+
                 // Update cart count/total if available
                 if ( data.data.cart_count ) {
                     const cartCountEls = document.querySelectorAll( '.cart-count, .count' );
@@ -274,6 +274,7 @@
                 }
                 document.body.dispatchEvent( new CustomEvent( 'wc_fragment_refresh' ) );
                 document.body.dispatchEvent( new CustomEvent( 'added_to_cart' ) );
+                document.body.dispatchEvent( new CustomEvent( 'wccs_refresh_cart' ) );
 
                 // Update cart fragments from response
                 if ( data.data.fragments ) {
@@ -410,10 +411,11 @@
                 success: function (res) {
                     if (res.success) {
                         $btn.removeClass('wccs-qv-loading').addClass('wccs-qv-added').text('✓ Added!');
-                        
+
                         // Trigger WooCommerce cart fragment refresh
                         $(document.body).trigger('wc_fragment_refresh');
                         $(document.body).trigger('added_to_cart');
+                        document.body.dispatchEvent(new CustomEvent('wccs_refresh_cart'));
 
                         // Close popup after short delay
                         setTimeout(function () {
@@ -499,3 +501,278 @@
     $(document).ready(init);
 
 })(jQuery);
+
+
+/* ════════════════════════════════════════════════════════════
+   WC Cannabis Shop — Persistent Cart Bar
+════════════════════════════════════════════════════════════ */
+( function () {
+    'use strict';
+
+    const cartBar      = document.getElementById( 'wccs-cart-bar' );
+    const cartBtn      = document.getElementById( 'wccs-cart-bar-btn' );
+    const cartSubtitle = document.getElementById( 'wccs-cart-bar-subtitle' );
+    const popupWrap    = document.getElementById( 'wccs-cart-popup-wrap' );
+    const closeBtn     = document.getElementById( 'wccs-cart-close' );
+    const backdrop     = document.getElementById( 'wccs-cart-backdrop' );
+    const cartItems    = document.getElementById( 'wccs-cart-items' );
+    const footerTotal  = document.getElementById( 'wccs-cart-footer-total' );
+
+    if ( ! cartBar || ! cartBtn ) return;
+
+    // Add body class for padding
+    document.body.classList.add( 'wccs-cart-active' );
+
+    let isOpen = false;
+    let hasItems = false;
+
+    /* ── Open popup ── */
+    function openCart() {
+        isOpen = true;
+        popupWrap.classList.add( 'wccs-cart-open' );
+        document.body.style.overflow = 'hidden';
+    }
+
+    /* ── Close popup ── */
+    function closeCart() {
+        isOpen = false;
+        popupWrap.classList.remove( 'wccs-cart-open' );
+        document.body.style.overflow = '';
+    }
+
+    /* ── Toggle popup ── */
+    cartBtn.addEventListener( 'click', function () {
+        if ( isOpen ) {
+            closeCart();
+        } else {
+            openCart();
+        }
+    } );
+
+    /* ── Close on button click ── */
+    if ( closeBtn ) {
+        closeBtn.addEventListener( 'click', closeCart );
+    }
+
+    /* ── Close on backdrop click ── */
+    if ( backdrop ) {
+        backdrop.addEventListener( 'click', closeCart );
+    }
+
+    /* ── Close on Escape ── */
+    document.addEventListener( 'keydown', function ( e ) {
+        if ( e.key === 'Escape' && isOpen ) {
+            closeCart();
+        }
+    } );
+
+    /* ── Fetch cart data via AJAX ── */
+    async function fetchCartData() {
+        try {
+            const res = await fetch( wccs.ajax_url, {
+                method: 'POST',
+                body: new URLSearchParams( {
+                    action: 'wccs_get_cart_data',
+                    nonce:  wccs.nonce,
+                } ),
+            } );
+            const data = await res.json();
+
+            if ( data.success ) {
+                updateCartUI( data.data );
+            }
+        } catch ( err ) {
+            console.error( 'WCCS cart fetch error', err );
+        }
+    }
+
+    /* ── Update cart UI ── */
+    function updateCartUI( cart ) {
+        const count = cart.count || 0;
+        const total = cart.total || '$0.00';
+        const items = cart.items || [];
+
+        const wasEmpty = ! hasItems;
+        hasItems = count > 0;
+
+        // Show/hide cart bar with animation
+        if ( hasItems ) {
+            cartBar.style.display = 'block';
+            if ( wasEmpty ) {
+                cartBar.style.animation = 'none';
+                cartBar.offsetHeight; // trigger reflow
+                cartBar.style.animation = '';
+            }
+        } else {
+            cartBar.style.display = 'none';
+            // Close popup if empty
+            if ( isOpen ) {
+                closeCart();
+            }
+        }
+
+        // Update subtitle: "1 product ($15.00)" or "2 products ($30.00)"
+        const label = count === 1 ? 'product' : 'products';
+        cartSubtitle.textContent = count + ' ' + label + ' (' + total + ')';
+
+        // Update footer total
+        footerTotal.textContent = total;
+
+        // Render items or empty state
+        if ( ! items.length ) {
+            cartItems.innerHTML = `
+                <div class="wccs-cart-empty-state">
+                    <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+                        <circle cx="18" cy="42" r="3" fill="#ccc"/>
+                        <circle cx="34" cy="42" r="3" fill="#ccc"/>
+                        <path d="M2 2h6l3 18h26l3-18H10" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <p>Your cart is empty</p>
+                </div>
+            `;
+            return;
+        }
+
+        cartItems.innerHTML = items.map( function ( item ) {
+            return `<div class="wccs-cart-item" data-key="${ item.key }">
+                <img class="wccs-cart-item-image"
+                     src="${ item.image }"
+                     alt="${ item.name }"
+                     loading="lazy">
+                <div class="wccs-cart-item-info">
+                    <div class="wccs-cart-item-name">${ item.name }</div>
+                    <div class="wccs-cart-item-qty-row">
+                        <button class="wccs-qty-btn wccs-qty-minus" data-key="${ item.key }" aria-label="Decrease quantity">
+                            <svg width="12" height="12" viewBox="0 0 12 2" fill="none">
+                                <rect width="12" height="2" rx="1" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <span class="wccs-qty-display">${ item.qty }</span>
+                        <button class="wccs-qty-btn wccs-qty-plus" data-key="${ item.key }" aria-label="Increase quantity">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M5 0h2v12H5zM0 5h12v2H0z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="wccs-cart-item-price">${ item.price }</div>
+                <button class="wccs-cart-item-remove"
+                        data-key="${ item.key }"
+                        aria-label="Remove ${ item.name }">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                        <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>`;
+        } ).join( '' );
+    }
+
+    /* ── Remove item from cart ── */
+    cartItems.addEventListener( 'click', async function ( e ) {
+        const btn = e.target.closest( '.wccs-cart-item-remove' );
+        if ( ! btn ) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const key  = btn.dataset.key;
+        const item = btn.closest( '.wccs-cart-item' );
+
+        if ( item ) {
+            item.style.opacity = '0.4';
+            item.style.pointerEvents = 'none';
+        }
+
+        try {
+            const res = await fetch( wccs.ajax_url, {
+                method: 'POST',
+                body: new URLSearchParams( {
+                    action:   'wccs_remove_from_cart',
+                    nonce:    wccs.nonce,
+                    cart_key: key,
+                } ),
+            } );
+            const data = await res.json();
+
+            if ( data.success ) {
+                updateCartUI( data.data );
+
+                if ( typeof jQuery !== 'undefined' ) {
+                    jQuery( document.body ).trigger( 'wc_fragment_refresh' );
+                }
+                document.body.dispatchEvent( new CustomEvent( 'wc_fragment_refresh' ) );
+            }
+        } catch ( err ) {
+            console.error( 'WCCS remove cart error', err );
+            if ( item ) {
+                item.style.opacity = '1';
+                item.style.pointerEvents = 'auto';
+            }
+        }
+    } );
+
+    /* ── Quantity +/- buttons ── */
+    cartItems.addEventListener( 'click', async function ( e ) {
+        const qtyBtn = e.target.closest( '.wccs-qty-btn' );
+        if ( ! qtyBtn ) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const key      = qtyBtn.dataset.key;
+        const isMinus  = qtyBtn.classList.contains( 'wccs-qty-minus' );
+        const item     = qtyBtn.closest( '.wccs-cart-item' );
+        const qtyEl    = item ? item.querySelector( '.wccs-qty-display' ) : null;
+        const currentQty = qtyEl ? parseInt( qtyEl.textContent ) : 1;
+        const newQty   = isMinus ? Math.max( 1, currentQty - 1 ) : currentQty + 1;
+
+        // Skip if same quantity (already at 1)
+        if ( newQty === currentQty ) return;
+
+        if ( item ) {
+            item.style.opacity = '0.5';
+            item.style.pointerEvents = 'none';
+        }
+
+        try {
+            const res = await fetch( wccs.ajax_url, {
+                method: 'POST',
+                body: new URLSearchParams( {
+                    action:    'wccs_update_cart_qty',
+                    nonce:     wccs.nonce,
+                    cart_key:  key,
+                    quantity:  newQty,
+                } ),
+            } );
+            const data = await res.json();
+
+            if ( data.success ) {
+                updateCartUI( data.data );
+
+                if ( typeof jQuery !== 'undefined' ) {
+                    jQuery( document.body ).trigger( 'wc_fragment_refresh' );
+                }
+                document.body.dispatchEvent( new CustomEvent( 'wc_fragment_refresh' ) );
+            }
+        } catch ( err ) {
+            console.error( 'WCCS update qty error', err );
+            if ( item ) {
+                item.style.opacity = '1';
+                item.style.pointerEvents = 'auto';
+            }
+        }
+    } );
+
+    /* ── Global cart refresh event ── */
+    document.body.addEventListener( 'wccs_refresh_cart', function () {
+        fetchCartData();
+    } );
+
+    document.body.addEventListener( 'wc_fragment_refresh', function () {
+        fetchCartData();
+    } );
+
+    // Initial fetch on page load
+    fetchCartData();
+
+} )();
