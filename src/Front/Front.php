@@ -19,6 +19,8 @@ class Front {
         add_action( 'wp_ajax_nopriv_wccs_remove_from_cart', [ $this, 'ajax_remove_from_cart' ] );
         add_action( 'wp_ajax_wccs_update_cart_qty', [ $this, 'ajax_update_cart_qty' ] );
         add_action( 'wp_ajax_nopriv_wccs_update_cart_qty', [ $this, 'ajax_update_cart_qty' ] );
+        add_action( 'wp_ajax_wccs_clear_cart', [ $this, 'ajax_clear_cart' ] );
+        add_action( 'wp_ajax_nopriv_wccs_clear_cart', [ $this, 'ajax_clear_cart' ] );
     }
 
     public function enqueue_assets(): void {
@@ -249,5 +251,20 @@ class Front {
         }
 
         wp_send_json_error( [ 'message' => 'Failed to update quantity.' ] );
+    }
+
+    /**
+     * Clear entire cart via AJAX.
+     */
+    public function ajax_clear_cart(): void {
+        check_ajax_referer( 'wccs_nonce', 'nonce' );
+
+        WC()->cart->empty_cart();
+
+        wp_send_json_success( [
+            'count' => 0,
+            'total' => wc_price( 0 ),
+            'items' => [],
+        ] );
     }
 }

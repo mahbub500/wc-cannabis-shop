@@ -772,6 +772,87 @@
         fetchCartData();
     } );
 
+    /* ── Show mini toast notification ── */
+    function showToast( message, type ) {
+        type = type || 'success';
+        var existing = document.querySelector( '.wccs-toast' );
+        if ( existing ) existing.remove();
+
+        var toast = document.createElement( 'div' );
+        toast.className = 'wccs-toast wccs-toast-' + type;
+        toast.innerHTML = message;
+        document.body.appendChild( toast );
+
+        requestAnimationFrame( function () {
+            toast.classList.add( 'wccs-toast-enter' );
+        } );
+
+        setTimeout( function () {
+            toast.classList.remove( 'wccs-toast-enter' );
+            toast.classList.add( 'wccs-toast-leave' );
+            setTimeout( function () {
+                toast.remove();
+            }, 300 );
+        }, 2000 );
+    }
+
+    /* ── Clear Cart confirmation ── */
+    const clearCartBtn    = document.getElementById( 'wccs-cart-clear-btn' );
+    const confirmBox      = document.getElementById( 'wccs-cart-confirm' );
+    const confirmNoBtn    = document.getElementById( 'wccs-cart-confirm-no' );
+    const confirmYesBtn   = document.getElementById( 'wccs-cart-confirm-yes' );
+
+    if ( clearCartBtn ) {
+        clearCartBtn.addEventListener( 'click', function () {
+            clearCartBtn.style.display = 'none';
+            confirmBox.style.display = 'block';
+        } );
+    }
+
+    if ( confirmNoBtn ) {
+        confirmNoBtn.addEventListener( 'click', function () {
+            confirmBox.style.display = 'none';
+            clearCartBtn.style.display = 'flex';
+        } );
+    }
+
+    if ( confirmYesBtn ) {
+        confirmYesBtn.addEventListener( 'click', async function () {
+            confirmYesBtn.disabled = true;
+            confirmYesBtn.textContent = 'Clearing…';
+
+            try {
+                const res = await fetch( wccs.ajax_url, {
+                    method: 'POST',
+                    body: new URLSearchParams( {
+                        action: 'wccs_clear_cart',
+                        nonce:  wccs.nonce,
+                    } ),
+                } );
+                const data = await res.json();
+
+                if ( data.success ) {
+                    updateCartUI( data.data );
+                    closeCart();
+                    showToast( '✓ Cart cleared' );
+
+                    if ( typeof jQuery !== 'undefined' ) {
+                        jQuery( document.body ).trigger( 'wc_fragment_refresh' );
+                    }
+                    document.body.dispatchEvent( new CustomEvent( 'wc_fragment_refresh' ) );
+                }
+            } catch ( err ) {
+                console.error( 'WCCS clear cart error', err );
+                showToast( '✕ Error clearing cart', 'error' );
+            }
+
+            confirmYesBtn.disabled = false;
+            confirmYesBtn.textContent = 'Clear All';
+            confirmBox.style.display = 'none';
+            clearCartBtn.style.display = 'flex';
+        } );
+    }
+
     // Initial fetch on page load
     fetchCartData();
 

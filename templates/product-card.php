@@ -2,6 +2,11 @@
 defined( 'ABSPATH' ) || exit;
 /** @var WC_Product $product */
 
+// Only show simple and variable products
+if ( ! in_array( $product->get_type(), [ 'simple', 'variable' ], true ) ) {
+    return;
+}
+
 $cats          = wp_get_post_terms( $product->get_id(), 'product_cat', [ 'fields' => 'names' ] );
 $strain_attr   = $product->get_attribute( 'pa_train_type' );
 $sale_enabled  = get_post_meta( $product->get_id(), '_wccs_sale_enabled', true );

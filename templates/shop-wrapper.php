@@ -213,9 +213,23 @@
                 <span class="wccs-cart-footer-label">Subtotal</span>
                 <span class="wccs-cart-footer-total" id="wccs-cart-footer-total">$0.00</span>
             </div>
-            <a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="wccs-cart-checkout-btn">
+            <a href="<?php echo esc_url( wc_get_checkout_url() ); ?>" class="wccs-cart-checkout-btn">
                 Checkout
             </a>
+        </div>
+        <button class="wccs-cart-clear-btn" id="wccs-cart-clear-btn">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+                <path d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v6M10 7v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 4l1 9a1 1 0 001 1h6a1 1 0 001-1l1-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Clear Cart
+        </button>
+        <div class="wccs-cart-confirm" id="wccs-cart-confirm" style="display:none;">
+            <p>Are you sure you want to clear your cart?</p>
+            <div class="wccs-cart-confirm-btns">
+                <button class="wccs-cart-confirm-no" id="wccs-cart-confirm-no">Cancel</button>
+                <button class="wccs-cart-confirm-yes" id="wccs-cart-confirm-yes">Clear All</button>
+            </div>
         </div>
     </div>
 </div>
