@@ -1,0 +1,202 @@
+
+/* =========================================================
+   WC Cannabis Shop — Admin Settings Styles
+   ========================================================= */
+
+/* ---------- Tab Nav ---------- */
+.wccs-tab-nav {
+    display: flex;
+    gap: 0;
+    margin: 20px 0 0;
+    border-bottom: 2px solid #2d6a2d;
+}
+
+.wccs-tab-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3c3c3c;
+    background: #f0f4f0;
+    border: 1px solid #c8d8c8;
+    border-bottom: none;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    transition: background .18s, color .18s;
+    letter-spacing: .01em;
+    position: relative;
+    bottom: -2px;
+}
+
+.wccs-tab-btn:hover {
+    background: #e3ede3;
+    color: #2d6a2d;
+}
+
+.wccs-tab-btn.wccs-tab-active {
+    background: #fff;
+    color: #2d6a2d;
+    border-color: #2d6a2d;
+    border-bottom-color: #fff;
+    z-index: 1;
+}
+
+/* ---------- Tab Panels ---------- */
+.wccs-tab-panel {
+    display: none;
+    padding: 24px 0 0;
+}
+
+.wccs-tab-panel.wccs-panel-active {
+    display: block;
+}
+
+/* ---------- Slots List (Tab 2) ---------- */
+.wccs-slots-table-wrap {
+    max-width: 680px;
+}
+
+.wccs-slots-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #fff;
+    border: 1px solid #dde4dd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(45,106,45,.07);
+}
+
+.wccs-slots-table thead {
+    background: #2d6a2d;
+    color: #fff;
+}
+
+.wccs-slots-table thead th {
+    padding: 11px 16px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: .03em;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.wccs-slots-table tbody tr {
+    border-bottom: 1px solid #eef2ee;
+    transition: background .12s;
+}
+
+.wccs-slots-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.wccs-slots-table tbody tr:hover {
+    background: #f6fbf6;
+}
+
+.wccs-slots-table td {
+    padding: 10px 16px;
+    vertical-align: middle;
+}
+
+.wccs-slot-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #e7f3e7;
+    color: #2d6a2d;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.wccs-slot-time {
+    font-variant-numeric: tabular-nums;
+    color: #444;
+}
+
+.wccs-slots-empty {
+    color: #9aa59a;
+    font-style: italic;
+    padding: 18px 0 8px;
+    font-size: 13px;
+}
+
+/* ---------- Existing styles (preserved + extended) ---------- */
+.wccs-settings-page .form-table th {
+    width: 160px;
+    font-weight: 600;
+}
+
+.wccs-location-wrap {
+    max-width: 600px;
+}
+
+.wccs-location-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.wccs-location-inputs input {
+    flex: 1;
+}
+
+.wccs-location-details {
+    margin-top: 8px;
+}
+
+.wccs-selected-location {
+    font-size: 13px;
+    color: #646970;
+    font-style: italic;
+}
+
+.wccs-time-slots-wrap {
+    max-width: 600px;
+}
+
+.wccs-add-time-slot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e8ede8;
+}
+
+.wccs-time-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f5f6f4;
+    border: 1px solid #e8ede8;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.wccs-slot-display {
+    flex: 1;
+    font-size: 13px;
+}
+
+.wccs-remove-slot-btn {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: #f0f0f1;
+    color: #646970;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+}
+
+.wccs-remove-slot-btn:hover {
+    background: #E24B4A;
+    color: #fff;
+}
