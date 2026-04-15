@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WC Cannabis Shop
  * Description: WooCommerce product shop page via shortcode with JS-powered filters.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires PHP: 7.4
  * Text Domain: wc-cannabis-shop
  */
