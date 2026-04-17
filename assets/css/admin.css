@@ -1,0 +1,447 @@
+/* =============================================================================
+   WC Cannabis Shop — Admin Styles
+   File: assets/admin.css
+   ============================================================================= */
+
+/* ── CSS Variables ─────────────────────────────────────────────────────────── */
+:root {
+    --wccs-green:        #2d6a4f;
+    --wccs-green-light:  #40916c;
+    --wccs-green-pale:   #d8f3dc;
+    --wccs-green-muted:  #b7e4c7;
+    --wccs-accent:       #1b4332;
+    --wccs-gold:         #d4a017;
+    --wccs-red:          #c0392b;
+    --wccs-red-pale:     #fdecea;
+    --wccs-text:         #1a1a2e;
+    --wccs-text-muted:   #6c757d;
+    --wccs-border:       #dee2e6;
+    --wccs-bg:           #f0faf4;
+    --wccs-card-bg:      #ffffff;
+    --wccs-radius:       10px;
+    --wccs-shadow:       0 2px 12px rgba(45, 106, 79, 0.10);
+    --wccs-shadow-hover: 0 6px 24px rgba(45, 106, 79, 0.18);
+    --wccs-transition:   all 0.22s ease;
+}
+
+/* ── Page wrapper ──────────────────────────────────────────────────────────── */
+.wccs-wrap {
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--wccs-text);
+    max-width: 1400px;
+}
+
+.wccs-page-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.6rem !important;
+    font-weight: 700;
+    color: var(--wccs-accent);
+    border-bottom: 3px solid var(--wccs-green-pale);
+    padding-bottom: 12px;
+    margin-bottom: 24px !important;
+}
+
+.wccs-icon {
+    font-size: 1.8rem;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────────── */
+.wccs-card {
+    background: var(--wccs-card-bg);
+    border: 1px solid var(--wccs-border);
+    border-radius: var(--wccs-radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--wccs-shadow);
+    transition: var(--wccs-transition);
+}
+
+.wccs-card:hover {
+    box-shadow: var(--wccs-shadow-hover);
+}
+
+.wccs-card h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--wccs-accent);
+    margin-top: 0;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--wccs-green-pale);
+}
+
+/* ── Shortcode display ─────────────────────────────────────────────────────── */
+.wccs-shortcode {
+    display: inline-block;
+    background: var(--wccs-accent);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    margin: 6px 0 18px;
+}
+
+/* ── Table ─────────────────────────────────────────────────────────────────── */
+.wccs-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.wccs-table th,
+.wccs-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--wccs-border);
+    font-size: 0.93rem;
+}
+
+.wccs-table thead th {
+    background: var(--wccs-green-pale);
+    color: var(--wccs-accent);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wccs-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.wccs-table code {
+    background: var(--wccs-bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--wccs-green);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+.wccs-btn.button-primary,
+.button.wccs-btn.button-primary {
+    background: var(--wccs-green) !important;
+    border-color: var(--wccs-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+    border-radius: 6px !important;
+    padding: 6px 18px !important;
+    transition: var(--wccs-transition);
+}
+
+.wccs-btn.button-primary:hover,
+.button.wccs-btn.button-primary:hover {
+    background: var(--wccs-accent) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.25) !important;
+}
+
+.wccs-btn-secondary,
+.button.wccs-btn-secondary {
+    border-radius: 6px !important;
+    font-weight: 500;
+}
+
+.wccs-locate-btn {
+    border-radius: 6px !important;
+    background: #fff !important;
+    border: 2px solid var(--wccs-green) !important;
+    color: var(--wccs-green) !important;
+    font-weight: 600 !important;
+    transition: var(--wccs-transition);
+}
+
+.wccs-locate-btn:hover {
+    background: var(--wccs-green) !important;
+    color: #fff !important;
+}
+
+.wccs-btn-edit.button {
+    background: #fff !important;
+    border-color: var(--wccs-green) !important;
+    color: var(--wccs-green) !important;
+    border-radius: 6px !important;
+    font-weight: 500;
+    transition: var(--wccs-transition);
+}
+
+.wccs-btn-edit.button:hover {
+    background: var(--wccs-green) !important;
+    color: #fff !important;
+}
+
+.wccs-btn-delete.button {
+    background: #fff !important;
+    border-color: var(--wccs-red) !important;
+    color: var(--wccs-red) !important;
+    border-radius: 6px !important;
+    font-weight: 500;
+    transition: var(--wccs-transition);
+}
+
+.wccs-btn-delete.button:hover {
+    background: var(--wccs-red) !important;
+    color: #fff !important;
+}
+
+/* ── Layout: two-column ────────────────────────────────────────────────────── */
+.wccs-locations-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media ( max-width: 1100px ) {
+    .wccs-locations-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Form fields ───────────────────────────────────────────────────────────── */
+.wccs-field {
+    margin-bottom: 20px;
+}
+
+.wccs-field > label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--wccs-accent);
+    margin-bottom: 6px;
+}
+
+.wccs-field .required {
+    color: var(--wccs-red);
+}
+
+.wccs-field input.regular-text {
+    width: 100%;
+    border-radius: 6px;
+    border: 1.5px solid var(--wccs-border);
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.wccs-field input.regular-text:focus {
+    border-color: var(--wccs-green);
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.12);
+    outline: none;
+}
+
+.wccs-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--wccs-border);
+}
+
+/* ── Map ───────────────────────────────────────────────────────────────────── */
+.wccs-map-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.wccs-map-hint {
+    font-size: 0.82rem;
+    color: var(--wccs-text-muted);
+    font-style: italic;
+}
+
+.wccs-map {
+    width: 100%;
+    height: 320px;
+    border-radius: var(--wccs-radius);
+    border: 2px solid var(--wccs-border);
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    transition: border-color 0.2s;
+}
+
+.wccs-map:focus-within,
+.wccs-map--active {
+    border-color: var(--wccs-green);
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.12);
+}
+
+.wccs-map--preview {
+    height: 300px;
+}
+
+/* fix Leaflet z-index clashes inside WP admin */
+.wccs-map .leaflet-top,
+.wccs-map .leaflet-bottom {
+    z-index: 400;
+}
+
+/* ── Time slots ────────────────────────────────────────────────────────────── */
+.wccs-time-slots {
+    display: grid;
+    grid-template-columns: repeat( auto-fill, minmax( 170px, 1fr ) );
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.wccs-slot-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--wccs-bg);
+    border: 1.5px solid var(--wccs-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition: var(--wccs-transition);
+    user-select: none;
+}
+
+.wccs-slot-label:hover {
+    border-color: var(--wccs-green-light);
+    background: var(--wccs-green-pale);
+}
+
+.wccs-slot-label input[type="checkbox"] {
+    accent-color: var(--wccs-green);
+    width: 15px;
+    height: 15px;
+}
+
+.wccs-slot-label:has(input:checked) {
+    border-color: var(--wccs-green);
+    background: var(--wccs-green-pale);
+    color: var(--wccs-accent);
+}
+
+/* ── Location cards ────────────────────────────────────────────────────────── */
+.wccs-location-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.wccs-location-card {
+    padding: 18px 20px;
+    border-left: 4px solid var(--wccs-green);
+    margin-bottom: 0 !important;
+}
+
+.wccs-location-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.wccs-location-card__icon {
+    font-size: 1.2rem;
+}
+
+.wccs-location-card__title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--wccs-accent);
+}
+
+.wccs-location-card__address,
+.wccs-location-card__coords {
+    margin: 4px 0;
+    font-size: 0.88rem;
+    color: var(--wccs-text-muted);
+}
+
+.wccs-location-card__slots {
+    margin: 10px 0 14px;
+}
+
+.wccs-slots-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wccs-accent);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wccs-slot-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.wccs-slot-tag {
+    background: var(--wccs-green-pale);
+    color: var(--wccs-accent);
+    border: 1px solid var(--wccs-green-muted);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.wccs-location-card__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--wccs-border);
+}
+
+/* ── Preview map card ──────────────────────────────────────────────────────── */
+.wccs-map-preview-card {
+    margin-bottom: 20px !important;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+.wccs-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    border: 2px dashed var(--wccs-border);
+    background: var(--wccs-bg);
+}
+
+.wccs-empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.wccs-empty-state p {
+    color: var(--wccs-text-muted);
+    font-size: 1rem;
+}
+
+/* ── Leaflet popup overrides ───────────────────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-popup-content {
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.wccs-popup-title {
+    font-weight: 700;
+    color: var(--wccs-accent);
+    margin-bottom: 4px;
+}
+
+.wccs-popup-slots {
+    font-size: 0.82rem;
+    color: var(--wccs-text-muted);
+    margin-top: 4px;
+ad

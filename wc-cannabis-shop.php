@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 define( 'WCCS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WCCS_URL', plugin_dir_url( __FILE__ ) );
+define( 'WCCS_VERSION', '1.0.1' );
 
 // Composer autoload
 if ( file_exists( WCCS_DIR . 'vendor/autoload.php' ) ) {
