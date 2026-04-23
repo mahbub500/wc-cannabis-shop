@@ -35,6 +35,9 @@ class Front {
         add_filter( 'woocommerce_checkout_fields',             [ $this, 'add_fulfilment_checkout_fields' ] );
         add_action( 'woocommerce_checkout_update_order_meta',  [ $this, 'save_fulfilment_order_meta' ] );
         add_action( 'woocommerce_admin_order_data_after_billing_address', [ $this, 'display_fulfilment_admin_meta' ], 10, 1 );
+        // Clear session once order is fully complete
+        add_action( 'woocommerce_order_status_completed',      [ $this, 'clear_fulfilment_session_on_complete' ] );
+        add_action( 'woocommerce_thankyou',                    [ $this, 'clear_fulfilment_session_on_complete' ] );
     }
 
     /* =========================================================================
@@ -287,33 +290,29 @@ class Front {
      * ====================================================================== */
 
     public function ajax_get_locations(): void {
-        // Verify nonce — use wp_verify_nonce directly so WC session
-        // timing issues cannot cause a false failure on public pages.
-        if ( ! isset( $_POST['nonce'] )
-            || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'wccs_nonce' )
-        ) {
-            wp_send_json_error( [ 'message' => 'Nonce failed.' ], 403 );
-        }
+        // No nonce check — this is a read-only public endpoint.
+        // Locations are non-sensitive (title, address, lat/lng).
 
-        // get_option() unserializes automatically; handle the rare string edge-case
         $raw = get_option( 'wccs_pickup_locations' );
-        if ( is_string( $raw ) ) {
+
+        // Paranoid unserialise: get_option does it automatically,
+        // but guard against edge cases where it comes back as a string.
+        if ( is_string( $raw ) && ! empty( $raw ) ) {
             $raw = maybe_unserialize( $raw );
         }
-        $locations = is_array( $raw ) ? array_values( $raw ) : [];
 
-        if ( empty( $locations ) ) {
+        if ( ! is_array( $raw ) || empty( $raw ) ) {
             wp_send_json_success( [] );
+            return;
         }
 
         $out = [];
-        foreach ( $locations as $i => $loc ) {
+        foreach ( array_values( $raw ) as $i => $loc ) {
             if ( ! is_array( $loc ) ) {
                 continue;
             }
 
-            // time_slots is an integer-keyed sub-array — always re-index
-            $slots = ( isset( $loc['time_slots'] ) && is_array( $loc['time_slots'] ) )
+            $slots = ( ! empty( $loc['time_slots'] ) && is_array( $loc['time_slots'] ) )
                 ? array_values( array_map( 'sanitize_text_field', $loc['time_slots'] ) )
                 : [];
 
@@ -383,41 +382,41 @@ class Front {
      */
     public function prefill_checkout_from_session(): void {
         $data = $this->get_session_fulfilment();
+
+        // var_dump( $data[''] );
         if ( empty( $data['mode'] ) ) {
             return;
         }
 
         $mode = $data['mode'];
 
-        if ( $mode === 'delivery' ) {
-            // Pre-fill WC shipping address
-            add_filter( 'woocommerce_checkout_get_value', function( $value, $input ) use ( $data ) {
-                $map = [
-                    'shipping_address_1' => $data['delivery_address']  ?? '',
-                    'shipping_city'      => $data['delivery_city']     ?? '',
-                    'shipping_state'     => $data['delivery_state']    ?? '',
-                    'shipping_postcode'  => $data['delivery_postcode'] ?? '',
-                    'shipping_country'   => $data['delivery_country']  ?? '',
-                    'order_comments'     => $data['delivery_note']     ?? '',
-                ];
-                return $map[ $input ] ?? $value;
-            }, 20, 2 );
-        }
+        add_filter( 'woocommerce_checkout_get_value', function( $value, $input ) use ( $data, $mode ) {
 
-        if ( $mode === 'mail' ) {
-            // Pre-fill WC billing address from mail data
-            add_filter( 'woocommerce_checkout_get_value', function( $value, $input ) use ( $data ) {
-                $map = [
-                    'billing_first_name' => $data['mail_first_name'] ?? '',
-                    'billing_last_name'  => $data['mail_last_name']  ?? '',
-                    'billing_address_1'  => $data['mail_address']    ?? '',
-                    'billing_city'       => $data['mail_city']       ?? '',
-                    'billing_postcode'   => $data['mail_postcode']   ?? '',
-                    'billing_country'    => $data['mail_country']    ?? '',
+            // var_dump( $data );
+            $map = [];
+
+
+
+            if ( $mode === 'delivery' ) {
+                $addr = $data['delivery_address'] ?? '';
+                $map  = [
+                    // Billing
+                    'billing_address_1' => $addr,
+                    // Shipping (mirror)
+                    // 'shipping_address_1' => $addr,
+                    'order_comments'     => $data['delivery_note'] ?? '',
                 ];
-                return $map[ $input ] ?? $value;
-            }, 20, 2 );
-        }
+            }
+
+            if ( $mode === 'mail' ) {
+                $addr = $data['mail_address'] ?? '';
+                $map  = [
+                    'billing_city' => $addr,
+                ];
+            }
+
+            return $map[ $input ] ?? $value;
+        }, 20, 2 );
     }
 
     /**
@@ -432,21 +431,52 @@ class Front {
     }
 
     /**
-     * Persist fulfilment data to order meta on checkout.
+     * Persist fulfilment data to order meta on checkout
+     * and write billing_address_1 directly into the WC order object.
      */
     public function save_fulfilment_order_meta( int $order_id ): void {
         $data = $this->get_session_fulfilment();
-        if ( ! empty( $data ) ) {
-            update_post_meta( $order_id, '_wccs_fulfilment', $data );
-            // Readable label for admin
-            $mode  = $data['mode'] ?? '';
-            $label = match ( $mode ) {
-                'pickup'   => '📍 ' . ( $data['pickup_title'] ?? '' ) . ' @ ' . ( $data['pickup_slot'] ?? '' ),
-                'delivery' => '🚚 ' . ( $data['delivery_address'] ?? '' ) . ', ' . ( $data['delivery_city'] ?? '' ),
-                'mail'     => '✉️ ' . ( $data['mail_address'] ?? '' ) . ', ' . ( $data['mail_city'] ?? '' ),
-                default    => '',
-            };
-            update_post_meta( $order_id, '_wccs_fulfilment_label', $label );
+        if ( empty( $data ) ) {
+            return;
+        }
+
+        $mode = $data['mode'] ?? '';
+
+        // Save raw data + human label to order meta
+        update_post_meta( $order_id, '_wccs_fulfilment', $data );
+
+        $label = match ( $mode ) {
+            'pickup'   => '📍 ' . ( $data['pickup_title'] ?? '' ) . ' @ ' . ( $data['pickup_slot'] ?? '' ),
+            'delivery' => '🚚 ' . ( $data['delivery_address'] ?? '' ),
+            'mail'     => '✉️ ' . ( $data['mail_address'] ?? '' ),
+            default    => '',
+        };
+        update_post_meta( $order_id, '_wccs_fulfilment_label', $label );
+
+        // Write the address directly into the WC order billing fields
+        $order = wc_get_order( $order_id );
+        if ( ! $order ) {
+            return;
+        }
+
+        if ( $mode === 'delivery' && ! empty( $data['delivery_address'] ) ) {
+            $order->set_billing_address_1( sanitize_text_field( $data['delivery_address'] ) );
+            $order->set_shipping_address_1( sanitize_text_field( $data['delivery_address'] ) );
+            $order->save();
+        }
+
+        if ( $mode === 'mail' && ! empty( $data['mail_address'] ) ) {
+            $order->set_billing_address_1( sanitize_text_field( $data['mail_address'] ) );
+            $order->save();
+        }
+    }
+
+    /**
+     * Clear the fulfilment session after order is completed / on thank-you page.
+     */
+    public function clear_fulfilment_session_on_complete( int $order_id ): void {
+        if ( WC()->session ) {
+            WC()->session->__unset( 'wccs_fulfilment' );
         }
     }
 
