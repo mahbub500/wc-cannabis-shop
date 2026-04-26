@@ -22,7 +22,8 @@ $badge_color   = $strain_map[ $strain_slug ] ?? '#888';
 <div class="wccs-product-card"
      data-cat="<?php echo esc_attr( implode( ',', wp_list_pluck( wp_get_post_terms( $product->get_id(), 'product_cat' ), 'slug' ) ) ); ?>"
      data-strain="<?php echo esc_attr( $strain_slug ); ?>"
-     data-product-id="<?php echo esc_attr( $product->get_id() ); ?>">
+     data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
+     data-product-type="<?php echo esc_attr( $product->get_type() ); ?>">
 
     <?php if ( $sale_enabled === '1' ) : ?>
         <span class="wccs-badge" style="background:#E24B4A;">SALE</span>

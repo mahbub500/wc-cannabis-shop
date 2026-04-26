@@ -914,6 +914,80 @@
     .wccs-qv-description { color: #8a9087; }
 }
 
+/* ── Variation selectors ── */
+.wccs-qv-variations {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.wccs-qv-attr-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.wccs-qv-attr-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9aa096;
+    cursor: default;
+}
+
+.wccs-qv-attr-select {
+    width: 100%;
+    padding: 9px 36px 9px 12px;
+    border: 1.5px solid rgba(0, 0, 0, .12);
+    border-radius: 8px;
+    background-color: #f5f6f4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239aa096' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1c18;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.wccs-qv-attr-select:focus {
+    border-color: #1D9E75;
+    box-shadow: 0 0 0 3px rgba(29, 158, 117, .12);
+}
+
+.wccs-qv-attr-select:hover {
+    border-color: rgba(0, 0, 0, .22);
+}
+
+.wccs-qv-loading-vars {
+    font-size: 13px;
+    color: #9aa096;
+    font-style: italic;
+    margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .wccs-qv-attr-select {
+        background-color: #23261f;
+        border-color: rgba(255, 255, 255, .12);
+        color: #e6ebe3;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2360645e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+    }
+    .wccs-qv-attr-select:focus {
+        border-color: #5DCAA5;
+        box-shadow: 0 0 0 3px rgba(93, 202, 165, .15);
+    }
+    .wccs-qv-attr-select:hover {
+        border-color: rgba(255, 255, 255, .22);
+    }
+}
+
 /* ── Actions row ── */
 .wccs-qv-actions {
     display: flex;

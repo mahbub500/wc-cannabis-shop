@@ -337,6 +337,7 @@
                             <span class="wccs-qv-price"></span>
                             <span class="wccs-qv-unit"></span>
                         </div>
+                        <div class="wccs-qv-variations" style="display:none;"></div>
                         <div class="wccs-qv-description"></div>
                         <div class="wccs-qv-actions">
                             <div class="wccs-qv-qty-wrap">
@@ -403,10 +404,11 @@
                 url: wccs.ajax_url,
                 type: 'POST',
                 data: {
-                    action:     'wccs_add_to_cart',
-                    product_id: productId,
-                    quantity:   qty,
-                    nonce:      wccs.cart_nonce,
+                    action:       'wccs_add_to_cart',
+                    product_id:   productId,
+                    variation_id: $overlay.data( 'variation-id' ) || 0,
+                    quantity:     qty,
+                    nonce:        wccs.cart_nonce,
                 },
                 success: function (res) {
                     if (res.success) {
@@ -436,12 +438,126 @@
         });
     }
 
+    /* ─── Variation helpers ─── */
+
+    function fetchAndRenderVariations( $overlay, productId ) {
+        const $varWrap = $overlay.find( '.wccs-qv-variations' );
+        $varWrap.html( '<p class="wccs-qv-loading-vars">Loading options…</p>' ).show();
+
+        $.ajax( {
+            url:  wccs.ajax_url,
+            type: 'POST',
+            data: {
+                action:     'wccs_get_variations',
+                product_id: productId,
+                nonce:      wccs.nonce,
+            },
+            success: function ( res ) {
+                if ( res.success ) {
+                    renderVariationSelectors( $overlay, res.data.attributes, productId );
+                } else {
+                    $varWrap.html( '<p class="wccs-qv-loading-vars">Could not load options.</p>' );
+                }
+            },
+            error: function () {
+                $varWrap.html( '<p class="wccs-qv-loading-vars">Error loading options.</p>' );
+            },
+        } );
+    }
+
+    function renderVariationSelectors( $overlay, attributes, productId ) {
+        const $varWrap = $overlay.find( '.wccs-qv-variations' );
+
+        const html = attributes.map( function ( attr ) {
+            const id   = 'wccs-attr-' + attr.name;
+            const opts = attr.options.map( function ( opt ) {
+                return `<option value="${ opt.value }">${ opt.label }</option>`;
+            } ).join( '' );
+            return `<div class="wccs-qv-attr-group">
+                        <label class="wccs-qv-attr-label" for="${ id }">${ attr.label }</label>
+                        <select class="wccs-qv-attr-select" id="${ id }" data-attr="${ attr.name }">
+                            <option value="">— Choose ${ attr.label } —</option>
+                            ${ opts }
+                        </select>
+                    </div>`;
+        } ).join( '' );
+
+        $varWrap.html( html ).show();
+
+        $varWrap.find( '.wccs-qv-attr-select' ).on( 'change', function () {
+            matchVariationServer( $overlay, attributes, productId );
+        } );
+    }
+
+    /* Send all selected attribute values to PHP for server-side matching.
+       Uses WC_Data_Store::find_matching_product_variation() — handles every
+       edge case (any-value attributes, slugs vs names, etc.) correctly. */
+    function matchVariationServer( $overlay, attributes, productId ) {
+        const $varWrap = $overlay.find( '.wccs-qv-variations' );
+        const $atc     = $overlay.find( '.wccs-qv-atc' );
+        const selected = {};
+
+        attributes.forEach( function ( attr ) {
+            const val = $varWrap.find( '[data-attr="' + attr.name + '"]' ).val();
+            if ( val ) {
+                selected[ 'attribute_' + attr.name ] = val;
+            }
+        } );
+
+        const allSelected = attributes.length > 0 &&
+            attributes.every( function ( attr ) {
+                return !!selected[ 'attribute_' + attr.name ];
+            } );
+
+        if ( ! allSelected ) {
+            $overlay.data( 'variation-id', null );
+            $atc.prop( 'disabled', true ).text( 'Select options' );
+            return;
+        }
+
+        $overlay.data( 'variation-id', null );
+        $atc.prop( 'disabled', true ).text( 'Checking…' );
+
+        $.ajax( {
+            url:  wccs.ajax_url,
+            type: 'POST',
+            data: {
+                action:     'wccs_match_variation',
+                product_id: productId,
+                nonce:      wccs.nonce,
+                attributes: JSON.stringify( selected ),
+            },
+            success: function ( res ) {
+                if ( res.success ) {
+                    const v = res.data;
+                    if ( v.is_in_stock && v.is_purchasable ) {
+                        $overlay.data( 'variation-id', v.variation_id );
+                        if ( v.price_html ) {
+                            $overlay.find( '.wccs-qv-price' ).html( v.price_html );
+                        }
+                        $atc.prop( 'disabled', false )
+                            .removeClass( 'wccs-qv-loading wccs-qv-added' )
+                            .text( 'Add to Cart' );
+                    } else {
+                        $atc.prop( 'disabled', true ).text( 'Out of Stock' );
+                    }
+                } else {
+                    $atc.prop( 'disabled', true ).text( 'Unavailable' );
+                }
+            },
+            error: function () {
+                $atc.prop( 'disabled', true ).text( 'Select options' );
+            },
+        } );
+    }
+
     /* ─── Open popup with product data ─── */
     function openPopup($card) {
         const $overlay = $('#' + POPUP_ID);
 
         // Pull data from the card DOM
         const productId   = $card.data('product-id') || $card.find('[data-product-id]').data('product-id');
+        const productType = $card.data( 'product-type' ) || 'simple';
         const title       = $card.find('.wccs-product-title').text().trim();
         const price       = $card.find('.wccs-price').html();
         const unit        = $card.find('.wccs-qty').text().trim();
@@ -451,8 +567,8 @@
         const badgeColor  = $card.find('.wccs-badge').css('background-color') || '';
         const description = $card.find('.wccs-product-description').html() || '';
 
-        // Reset qty
-        $overlay.data('qty', 1).data('product-id', productId);
+        // Reset state
+        $overlay.data( 'qty', 1 ).data( 'product-id', productId ).data( 'variation-id', null );
 
         // Populate
         $overlay.find('.wccs-qv-image').attr({ src: imgSrc, alt: imgAlt });
@@ -468,6 +584,13 @@
             $overlay.find('.wccs-qv-badge').text(badgeText).css('background-color', badgeColor).show();
         } else {
             $overlay.find('.wccs-qv-badge').hide();
+        }
+
+        // Variations — reset then load if variable
+        $overlay.find( '.wccs-qv-variations' ).empty().hide();
+        if ( productType === 'variable' ) {
+            $overlay.find( '.wccs-qv-atc' ).prop( 'disabled', true ).text( 'Select options' );
+            fetchAndRenderVariations( $overlay, productId );
         }
 
         // Show

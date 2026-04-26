@@ -21,6 +21,10 @@ class Front {
         add_action( 'wp_ajax_nopriv_wccs_update_cart_qty', [ $this, 'ajax_update_cart_qty' ] );
         add_action( 'wp_ajax_wccs_clear_cart', [ $this, 'ajax_clear_cart' ] );
         add_action( 'wp_ajax_nopriv_wccs_clear_cart', [ $this, 'ajax_clear_cart' ] );
+        add_action( 'wp_ajax_wccs_get_variations', [ $this, 'ajax_get_variations' ] );
+        add_action( 'wp_ajax_nopriv_wccs_get_variations', [ $this, 'ajax_get_variations' ] );
+        add_action( 'wp_ajax_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
+        add_action( 'wp_ajax_nopriv_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
     }
 
     public function enqueue_assets(): void {
@@ -96,8 +100,9 @@ class Front {
     public function ajax_add_to_cart(): void {
         check_ajax_referer( 'wccs_add_to_cart', 'nonce' );
 
-        $product_id = absint( $_POST['product_id'] ?? 0 );
-        $quantity   = absint( $_POST['quantity'] ?? 1 );
+        $product_id   = absint( $_POST['product_id'] ?? 0 );
+        $variation_id = absint( $_POST['variation_id'] ?? 0 );
+        $quantity     = absint( $_POST['quantity'] ?? 1 );
 
         if ( ! $product_id ) {
             wp_send_json_error( [ 'message' => 'Invalid product.' ] );
@@ -108,8 +113,15 @@ class Front {
             wp_send_json_error( [ 'message' => 'Product not found.' ] );
         }
 
-        // Add to cart
-        $cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity );
+        $variation = [];
+        if ( $variation_id ) {
+            $variation_product = wc_get_product( $variation_id );
+            if ( $variation_product ) {
+                $variation = $variation_product->get_variation_attributes();
+            }
+        }
+
+        $cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation );
 
         if ( $cart_item_key ) {
             // Get updated cart fragments
@@ -265,6 +277,129 @@ class Front {
             'count' => 0,
             'total' => wc_price( 0 ),
             'items' => [],
+        ] );
+    }
+
+    /**
+     * Return attribute labels + option value/label pairs for a variable product.
+     * Matching is done server-side via wccs_match_variation — no need to send all variations.
+     */
+    public function ajax_get_variations(): void {
+        check_ajax_referer( 'wccs_nonce', 'nonce' );
+
+        $product_id = absint( $_POST['product_id'] ?? 0 );
+        if ( ! $product_id ) {
+            wp_send_json_error( [ 'message' => 'Invalid product.' ] );
+        }
+
+        $product = wc_get_product( $product_id );
+        if ( ! $product || $product->get_type() !== 'variable' ) {
+            wp_send_json_error( [ 'message' => 'Not a variable product.' ] );
+        }
+
+        $attributes = [];
+        foreach ( $product->get_variation_attributes() as $attr_name => $option_slugs ) {
+            $options = [];
+            if ( taxonomy_exists( $attr_name ) ) {
+                foreach ( $option_slugs as $slug ) {
+                    $term      = get_term_by( 'slug', $slug, $attr_name );
+                    $options[] = [
+                        'value' => $slug,
+                        'label' => $term ? $term->name : ucfirst( str_replace( '-', ' ', $slug ) ),
+                    ];
+                }
+            } else {
+                foreach ( $option_slugs as $value ) {
+                    $options[] = [ 'value' => $value, 'label' => $value ];
+                }
+            }
+
+            $attributes[] = [
+                'name'    => $attr_name,
+                'label'   => wc_attribute_label( $attr_name ),
+                'options' => $options,
+            ];
+        }
+
+        wp_send_json_success( [ 'attributes' => $attributes ] );
+    }
+
+    /**
+     * Use WooCommerce's own data store to match the selected attributes to a variation ID.
+     */
+    public function ajax_match_variation(): void {
+
+        $product_id = absint( $_POST['product_id'] ?? 0 );
+        $raw_attrs  = wp_unslash( $_POST['attributes'] ?? '{}' );
+        $attributes = json_decode( $raw_attrs, true );
+
+        if ( ! $product_id || ! is_array( $attributes ) ) {
+            wp_send_json_error( [ 'message' => 'Invalid request.' ] );
+        }
+
+        $product = wc_get_product( $product_id );
+
+        if ( ! $product || $product->get_type() !== 'variable' ) {
+            wp_send_json_error( [ 'message' => 'Invalid product.' ] );
+        }
+
+        $product_attributes = $product->get_attributes();
+        $clean = [];
+
+        foreach ( $attributes as $key => $val ) {
+
+            // remove "attribute_" prefix
+            $key = str_replace( 'attribute_', '', $key );
+
+            $matched_taxonomy = null;
+
+            foreach ( $product_attributes as $taxonomy => $attr_obj ) {
+                if (
+                    sanitize_title( $taxonomy ) === sanitize_title( $key ) ||
+                    sanitize_title( wc_attribute_label( $taxonomy ) ) === sanitize_title( $key )
+                ) {
+                    $matched_taxonomy = $taxonomy;
+                    break;
+                }
+            }
+
+            // fallback
+            if ( ! $matched_taxonomy ) {
+                $matched_taxonomy = sanitize_title( $key );
+            }
+
+            $clean_key = 'attribute_' . $matched_taxonomy;
+
+            // IMPORTANT:
+            // - Custom attributes → use raw value
+            // - Global attributes (pa_) → use slug
+            if ( strpos( $matched_taxonomy, 'pa_' ) === 0 ) {
+                $clean_val = sanitize_title( $val );
+            } else {
+                $clean_val = trim( $val );
+            }
+
+            $clean[ $clean_key ] = $clean_val;
+        }
+
+        $data_store   = \WC_Data_Store::load( 'product' );
+        $variation_id = $data_store->find_matching_product_variation( $product, $clean );
+
+        if ( ! $variation_id ) {
+            wp_send_json_error( [ 'message' => 'No matching variation.' ] );
+        }
+
+        $variation = wc_get_product( $variation_id );
+
+        if ( ! $variation ) {
+            wp_send_json_error( [ 'message' => 'Variation not found.' ] );
+        }
+
+        wp_send_json_success( [
+            'variation_id'   => $variation_id,
+            'price_html'     => $variation->get_price_html(),
+            'is_in_stock'    => $variation->is_in_stock(),
+            'is_purchasable' => $variation->is_purchasable(),
         ] );
     }
 }
