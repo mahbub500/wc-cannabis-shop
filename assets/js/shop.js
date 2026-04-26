@@ -764,6 +764,7 @@
                      loading="lazy">
                 <div class="wccs-cart-item-info">
                     <div class="wccs-cart-item-name">${ item.name }</div>
+                    <div class="wccs-cart-item-unit-price">${ item.unit_price } / pc</div>
                     <div class="wccs-cart-item-qty-row">
                         <button class="wccs-qty-btn wccs-qty-minus" data-key="${ item.key }" aria-label="Decrease quantity">
                             <svg width="12" height="12" viewBox="0 0 12 2" fill="none">

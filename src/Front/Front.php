@@ -158,12 +158,13 @@ class Front {
             $raw_price = wp_strip_all_tags( wc_price( $cart_item['line_total'] ) );
 
             $items[] = [
-                'key'     => $cart_item_key,
-                'name'    => $product->get_name(),
-                'qty'     => $cart_item['quantity'],
-                'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
-                'image'   => esc_url( $image_url ),
-            ];
+                    'key'        => $cart_item_key,
+                    'name'       => $product->get_name(),
+                    'qty'        => $cart_item['quantity'],
+                    'price'      => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+                    'unit_price' => html_entity_decode( trim( wp_strip_all_tags( wc_price( $cart_item['line_subtotal'] / $cart_item['quantity'] ) ) ), ENT_QUOTES, 'UTF-8' ),
+                    'image'      => esc_url( $image_url ),
+                ];
         }
 
         $raw_total = wp_strip_all_tags( $cart->get_cart_total() );
@@ -202,12 +203,13 @@ class Front {
                 $raw_price = wp_strip_all_tags( wc_price( $cart_item['line_total'] ) );
 
                 $items[] = [
-                    'key'     => $cart_item_key,
-                    'name'    => $product->get_name(),
-                    'qty'     => $cart_item['quantity'],
-                    'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
-                    'image'   => esc_url( $image_url ),
-                ];
+    'key'        => $cart_item_key,
+    'name'       => $product->get_name(),
+    'qty'        => $cart_item['quantity'],
+    'price'      => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+    'unit_price' => html_entity_decode( trim( wp_strip_all_tags( wc_price( $cart_item['line_subtotal'] / $cart_item['quantity'] ) ) ), ENT_QUOTES, 'UTF-8' ),
+    'image'      => esc_url( $image_url ),
+];
             }
 
             wp_send_json_success( [
@@ -234,24 +236,43 @@ class Front {
         }
 
         $cart = WC()->cart;
+
+        if ( ! $cart ) {
+            wp_send_json_error( [ 'message' => 'Cart not found.' ] );
+        }
+
         $updated = $cart->set_quantity( $cart_key, $quantity );
 
         if ( $updated ) {
+
             $raw_total = wp_strip_all_tags( $cart->get_cart_total() );
             $items     = [];
 
             foreach ( $cart->get_cart() as $item_key => $item ) {
+
                 $product   = $item['data'];
                 $image_id  = $product->get_image_id();
-                $image_url = $image_id ? wp_get_attachment_image_url( $image_id, [48, 48] ) : wc_placeholder_img_src( [48, 48] );
+                $image_url = $image_id
+                    ? wp_get_attachment_image_url( $image_id, [48, 48] )
+                    : wc_placeholder_img_src( [48, 48] );
+
                 $raw_price = wp_strip_all_tags( wc_price( $item['line_total'] ) );
 
+                $unit_price = $item['quantity'] > 0
+                    ? $item['line_subtotal'] / $item['quantity']
+                    : 0;
+
                 $items[] = [
-                    'key'     => $item_key,
-                    'name'    => $product->get_name(),
-                    'qty'     => $item['quantity'],
-                    'price'   => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
-                    'image'   => esc_url( $image_url ),
+                    'key'        => $item_key,
+                    'name'       => $product->get_name(),
+                    'qty'        => $item['quantity'],
+                    'price'      => html_entity_decode( trim( $raw_price ), ENT_QUOTES, 'UTF-8' ),
+                    'unit_price' => html_entity_decode(
+                        trim( wp_strip_all_tags( wc_price( $unit_price ) ) ),
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ),
+                    'image'      => esc_url( $image_url ),
                 ];
             }
 
