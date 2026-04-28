@@ -237,6 +237,7 @@
     grid.addEventListener( 'click', async e => {
         const btn = e.target.closest( '.wccs-add-to-cart' );
         if ( ! btn ) return;
+        if ( btn.classList.contains( 'wccs-open-quickview' ) ) return;
 
         e.preventDefault();
         e.stopPropagation();
@@ -615,8 +616,16 @@
             openPopup($card);
         });
 
-        // Prevent "Add to Cart" button on card from opening popup
-        $(document).on('click', '.wccs-product-card .wccs-add-to-cart', function (e) {
+        // Variable product "ADD TO CART" button opens quick view popup
+        $(document).on('click', '.wccs-product-card .wccs-open-quickview', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const $card = $(this).closest('.wccs-product-card');
+            openPopup($card);
+        });
+
+        // Prevent simple "Add to Cart" button on card from opening popup
+        $(document).on('click', '.wccs-product-card .wccs-add-to-cart:not(.wccs-open-quickview)', function (e) {
             e.stopPropagation();
         });
     }

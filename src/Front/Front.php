@@ -25,6 +25,7 @@ class Front {
         add_action( 'wp_ajax_nopriv_wccs_get_variations', [ $this, 'ajax_get_variations' ] );
         add_action( 'wp_ajax_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
         add_action( 'wp_ajax_nopriv_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
+        add_action( 'woocommerce_cart_calculate_fees', [ $this, 'delivery_fee_rules' ] );
     }
 
     public function enqueue_assets(): void {
@@ -100,6 +101,11 @@ class Front {
     public function ajax_add_to_cart(): void {
         check_ajax_referer( 'wccs_add_to_cart', 'nonce' );
 
+        // Ensure cart is loaded (important for live)
+        if ( ! WC()->cart ) {
+            wc_load_cart();
+        }
+
         $product_id   = absint( $_POST['product_id'] ?? 0 );
         $variation_id = absint( $_POST['variation_id'] ?? 0 );
         $quantity     = absint( $_POST['quantity'] ?? 1 );
@@ -109,22 +115,35 @@ class Front {
         }
 
         $product = wc_get_product( $product_id );
+
         if ( ! $product ) {
             wp_send_json_error( [ 'message' => 'Product not found.' ] );
         }
 
+        // Optional safety check
+        if ( ! $product->is_purchasable() || ! $product->is_in_stock() ) {
+            wp_send_json_error( [ 'message' => 'Product not available.' ] );
+        }
+
         $variation = [];
+
         if ( $variation_id ) {
             $variation_product = wc_get_product( $variation_id );
+
             if ( $variation_product ) {
                 $variation = $variation_product->get_variation_attributes();
             }
         }
 
-        $cart_item_key = WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation );
+        $cart_item_key = WC()->cart->add_to_cart(
+            $product_id,
+            $quantity,
+            $variation_id,
+            $variation
+        );
 
         if ( $cart_item_key ) {
-            // Get updated cart fragments
+
             ob_start();
             woocommerce_mini_cart();
             $mini_cart = ob_get_clean();
@@ -132,10 +151,11 @@ class Front {
             wp_send_json_success( [
                 'cart_item_key' => $cart_item_key,
                 'fragments'     => [
-                    '.widget_shopping_cart_content' => '<div class="widget_shopping_cart_content">' . $mini_cart . '</div>',
+                    '.widget_shopping_cart_content' =>
+                        '<div class="widget_shopping_cart_content">' . $mini_cart . '</div>',
                 ],
-                'cart_count'    => WC()->cart->get_cart_contents_count(),
-                'cart_total'    => WC()->cart->get_cart_total(),
+                'cart_count' => WC()->cart->get_cart_contents_count(),
+                'cart_total' => WC()->cart->get_cart_total(),
             ] );
         }
 
@@ -422,5 +442,23 @@ class Front {
             'is_in_stock'    => $variation->is_in_stock(),
             'is_purchasable' => $variation->is_purchasable(),
         ] );
+    }
+
+    public function delivery_fee_rules(): void {
+        if ( ! defined( 'DOING_AJAX' ) ) {
+            return;
+        }
+
+        $subtotal = WC()->cart->get_subtotal();
+
+        if ( $subtotal < 60 ) {
+            wc_add_notice( 'Minimum order for delivery is $60.', 'error' );
+            return;
+        }
+
+        if ( $subtotal < 100 ) {
+            WC()->cart->add_fee( 'Delivery Fee', 10 );
+        }
+        // $100+ gets free delivery — no fee added
     }
 }
