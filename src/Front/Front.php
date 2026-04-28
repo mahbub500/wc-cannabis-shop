@@ -26,6 +26,9 @@ class Front {
         add_action( 'wp_ajax_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
         add_action( 'wp_ajax_nopriv_wccs_match_variation', [ $this, 'ajax_match_variation' ] );
         add_action( 'woocommerce_cart_calculate_fees', [ $this, 'delivery_fee_rules' ] );
+        add_action( 'woocommerce_before_checkout_form', [ $this, 'checkout_delivery_notice' ], 5 );
+        add_action( 'woocommerce_checkout_process', [ $this, 'checkout_delivery_validation' ] );
+        add_action( 'woocommerce_checkout_order_processed', [ $this, 'add_delivery_order_note' ] );
     }
 
     public function enqueue_assets(): void {
@@ -444,21 +447,87 @@ class Front {
         ] );
     }
 
+    private function delivery_settings(): array {
+        return [
+            'enabled'    => get_option( 'wccs_delivery_enabled', 'yes' ) === 'yes',
+            'min_order'  => (float) get_option( 'wccs_delivery_min_order', 100 ),
+            'fee'        => (float) get_option( 'wccs_delivery_fee', 50 ),
+            'order_note' => get_option( 'wccs_delivery_order_note', 'yes' ) === 'yes',
+        ];
+    }
+
     public function delivery_fee_rules(): void {
-        if ( ! defined( 'DOING_AJAX' ) ) {
+        if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+            return;
+        }
+
+        $s = $this->delivery_settings();
+        if ( ! $s['enabled'] ) {
             return;
         }
 
         $subtotal = WC()->cart->get_subtotal();
 
-        if ( $subtotal < 60 ) {
-            wc_add_notice( 'Minimum order for delivery is $60.', 'error' );
+        if ( $subtotal < $s['min_order'] ) {
+            WC()->cart->add_fee( __( 'Delivery Fee', 'wc-cannabis-shop' ), $s['fee'] );
+        }
+        // min_order+ → free delivery, no fee
+    }
+
+    public function checkout_delivery_notice(): void {
+        $s = $this->delivery_settings();
+        if ( ! $s['enabled'] ) {
             return;
         }
 
-        if ( $subtotal < 100 ) {
-            WC()->cart->add_fee( 'Delivery Fee', 10 );
+        $subtotal = WC()->cart->get_subtotal();
+
+        if ( $subtotal < $s['min_order'] ) {
+            wc_add_notice(
+                sprintf(
+                    'A delivery fee of $%s has been added. Spend $%s more to get free delivery.',
+                    number_format( $s['fee'], 2 ),
+                    number_format( $s['min_order'] - $subtotal, 2 )
+                ),
+                'notice'
+            );
+        } else {
+            wc_add_notice( 'Your order qualifies for free delivery!', 'success' );
         }
-        // $100+ gets free delivery — no fee added
+    }
+
+    public function checkout_delivery_validation(): void {
+        // No blocking — orders under minimum are allowed but charged the extra delivery fee.
+    }
+
+    public function add_delivery_order_note( int $order_id ): void {
+        $s = $this->delivery_settings();
+        if ( ! $s['enabled'] || ! $s['order_note'] ) {
+            return;
+        }
+
+        $order = wc_get_order( $order_id );
+        if ( ! $order ) {
+            return;
+        }
+
+        $subtotal = (float) $order->get_subtotal();
+
+        if ( $subtotal >= $s['min_order'] ) {
+            $note = sprintf(
+                'Free delivery applied — order subtotal $%s meets the $%s minimum.',
+                number_format( $subtotal, 2 ),
+                number_format( $s['min_order'], 2 )
+            );
+        } else {
+            $note = sprintf(
+                'Delivery fee of $%s applied — order subtotal $%s is below the $%s minimum.',
+                number_format( $s['fee'], 2 ),
+                number_format( $subtotal, 2 ),
+                number_format( $s['min_order'], 2 )
+            );
+        }
+
+        $order->add_order_note( $note );
     }
 }

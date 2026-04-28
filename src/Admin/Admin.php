@@ -6,31 +6,14 @@ class Admin {
     private const META_KEY = '_wccs_sale_enabled';
 
     public function init(): void {
-        add_action( 'admin_menu', [ $this, 'add_menu' ] );
+        add_filter( 'woocommerce_get_settings_pages', [ $this, 'register_settings_page' ] );
         add_action( 'add_meta_boxes', [ $this, 'add_sale_meta_box' ] );
         add_action( 'save_post_product', [ $this, 'save_sale_meta' ] );
     }
 
-    public function add_menu(): void {
-        add_options_page(
-            'Cannabis Shop Settings',
-            'Cannabis Shop',
-            'manage_options',
-            'wccs-settings',
-            [ $this, 'render_settings' ]
-        );
-    }
-
-    public function render_settings(): void {
-        echo '<div class="wrap"><h1>Cannabis Shop Settings</h1>';
-        echo '<p>Use shortcode <code>[cannabis_shop]</code> on any page.</p>';
-        echo '<h3>Shortcode Options</h3>';
-        echo '<ul>';
-        echo '<li><code>columns="3"</code> — Number of product columns (default: 3)</li>';
-        echo '<li><code>per_page="12"</code> — Products per page (default: 12)</li>';
-        echo '<li><code>category=""</code> — Limit to a WC category slug</li>';
-        echo '</ul>';
-        echo '</div>';
+    public function register_settings_page( array $pages ): array {
+        $pages[] = new SettingsPage();
+        return $pages;
     }
 
     public function add_sale_meta_box(): void {
