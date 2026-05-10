@@ -1,31 +1,49 @@
-<?php defined( 'ABSPATH' ) || exit; ?>
+<?php defined( 'ABSPATH' ) || exit;
 
-<div class="wccs-shop" 
-     data-per-page="<?php echo esc_attr( $this->atts['per_page'] ); ?>"
-     data-columns="<?php echo esc_attr( $this->atts['columns'] ); ?>">
+/**
+ * Variables injected by ShortcodeRenderer::render():
+ *   $atts     – shortcode attributes array (columns, per_page, category)
+ *   $products – array of product IDs for first page
+ *   $total    – total found posts (int)
+ *   $cats     – array of WP_Term objects
+ *
+ * NOTE: $this is NOT available in include() scope.
+ *       Use $atts['columns'] etc., not $this->atts['columns'].
+ */
 
-     <!-- Category Icons -->
-        <div class="wccs-category-icons">
-            <?php foreach ( $cats as $cat ) : ?>
-                <?php if ( $cat->slug === 'uncategorized' ) continue; ?>
-                <div class="wccs-cat-icon" data-cat="<?php echo esc_attr( $cat->slug ); ?>">
-                    <?php
-                    $thumbnail_id = get_term_meta( $cat->term_id, 'thumbnail_id', true );
-                    if ( $thumbnail_id ) {
-                        echo wp_get_attachment_image( $thumbnail_id, [60,60] );
-                    } else {
-                        echo '<span class="wccs-cat-placeholder">📦</span>';
-                    }
-                    ?>
-                    <span><?php echo esc_html( $cat->name ); ?></span>
-                </div>
-            <?php endforeach; ?>
-        </div>
+$cols        = (int) ( $atts['columns'] ?? 3 );
+$per_page    = (int) ( $atts['per_page'] ?? 12 );
+$default_cat = sanitize_text_field( $atts['category'] ?? '' );
+
+// Show Load More only when there are MORE products than fit on the first page.
+$show_load_more = ( $total > $per_page );
+?>
+
+<div class="wccs-shop"
+     data-per-page="<?php echo esc_attr( $per_page ); ?>"
+     data-columns="<?php echo esc_attr( $cols ); ?>"
+     data-default-category="<?php echo esc_attr( $default_cat ); ?>">
+
+    <!-- Category Icons -->
+    <div class="wccs-category-icons">
+        <?php foreach ( $cats as $cat ) : ?>
+            <?php if ( $cat->slug === 'uncategorized' ) continue; ?>
+            <div class="wccs-cat-icon" data-cat="<?php echo esc_attr( $cat->slug ); ?>">
+                <?php
+                $thumbnail_id = get_term_meta( $cat->term_id, 'thumbnail_id', true );
+                if ( $thumbnail_id ) {
+                    echo wp_get_attachment_image( $thumbnail_id, [60, 60] );
+                } else {
+                    echo '<span class="wccs-cat-placeholder">📦</span>';
+                }
+                ?>
+                <span><?php echo esc_html( $cat->name ); ?></span>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
     <!-- Sidebar Filters -->
     <aside class="wccs-sidebar">
-
-
 
         <div class="wccs-search-wrap">
             <span class="wccs-search-icon">🔍</span>
@@ -33,12 +51,10 @@
             <button class="wccs-search-clear" aria-label="Clear search">✕</button>
         </div>
 
-        <!-- Clear Filters (above categories) -->
+        <!-- Clear Filters -->
         <div class="wccs-filter-group">
             <button class="wccs-clear-filters" id="wccs-clear-filters-top">Clear</button>
         </div>
-
-        
 
         <!-- Specials -->
         <div class="wccs-filter-group">
@@ -57,7 +73,7 @@
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">STRAIN TYPE</div>
             <div class="wccs-strain-buttons">
-                <?php foreach ( ['INDICA','SATIVA','HYBRID','CBD','NONE'] as $strain ) : ?>
+                <?php foreach ( ['INDICA', 'SATIVA', 'HYBRID', 'CBD', 'NONE'] as $strain ) : ?>
                     <button class="wccs-strain-btn" data-strain="<?php echo esc_attr( strtolower( $strain ) ); ?>">
                         <?php echo esc_html( $strain ); ?>
                     </button>
@@ -69,46 +85,25 @@
         <div class="wccs-filter-group">
             <div class="wccs-filter-title">PRICE</div>
             <div class="wccs-price-filters">
+                <?php
+                $price_ranges = [
+                    '0-20'  => 'Under $20',
+                    '20-40' => '$20 – $40',
+                    '40-60' => '$40 – $60',
+                    '60-80' => '$60 – $80',
+                    '80'    => 'Over $80',
+                ];
+                foreach ( $price_ranges as $value => $label ) :
+                ?>
                 <label class="wccs-price-checkbox">
-                    <input type="checkbox" name="price" value="0-20">
+                    <input type="checkbox" name="price" value="<?php echo esc_attr( $value ); ?>">
                     <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
                         <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
                         <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
                     </svg>
-                    <span>Under $20</span>
+                    <span><?php echo esc_html( $label ); ?></span>
                 </label>
-                <label class="wccs-price-checkbox">
-                    <input type="checkbox" name="price" value="20-40">
-                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
-                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
-                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>$20 – $40</span>
-                </label>
-                <label class="wccs-price-checkbox">
-                    <input type="checkbox" name="price" value="40-60">
-                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
-                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
-                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>$40 – $60</span>
-                </label>
-                <label class="wccs-price-checkbox">
-                    <input type="checkbox" name="price" value="60-80">
-                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
-                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
-                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>$60 – $80</span>
-                </label>
-                <label class="wccs-price-checkbox">
-                    <input type="checkbox" name="price" value="80">
-                    <svg class="wccs-custom-checkbox" width="20" height="20" viewBox="0 0 20 20">
-                        <rect width="18" height="18" x="1" y="1" stroke="#d0d0d0" stroke-width="1.5" rx="3" fill="none"></rect>
-                        <polyline class="wccs-checkmark" points="5,10 8,13 15,6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
-                    </svg>
-                    <span>Over $80</span>
-                </label>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -126,6 +121,7 @@
         <div class="wccs-filter-group">
             <button class="wccs-clear-all" id="wccs-clear-all">✕ Clear All Filters</button>
         </div>
+
     </aside>
 
     <!-- Main Content -->
@@ -146,7 +142,7 @@
             </div>
         </div>
 
-        <div class="wccs-grid" style="--wccs-cols:<?php echo esc_attr( $this->atts['columns'] ); ?>">
+        <div class="wccs-grid" style="--wccs-cols:<?php echo esc_attr( $cols ); ?>">
             <?php foreach ( $products as $product_id ) :
                 $product = wc_get_product( $product_id );
                 if ( ! $product ) continue;
@@ -161,10 +157,20 @@
         <div class="wccs-no-results" style="display:none;">No products found.</div>
 
         <div class="wccs-pagination">
-            <button class="wccs-load-more" data-page="2">Load More</button>
+            <?php /*
+             * display:none  → total ≤ per_page  (e.g. 14 products, per_page=16 → hidden)
+             * display:block → total >  per_page  (e.g. 20 products, per_page=16 → visible)
+             * JS fetchProducts() re-evaluates this after every AJAX call via updateLoadMore().
+             */ ?>
+            <button class="wccs-load-more"
+                    style="display:<?php echo $show_load_more ? 'block' : 'none'; ?>;">
+                Load More
+            </button>
         </div>
-    </div>
-</div>
+
+    </div><!-- /.wccs-main -->
+
+</div><!-- /.wccs-shop -->
 
 <!-- =============================================
      PERSISTENT CART BAR (Floating Bottom)
@@ -217,7 +223,7 @@
                 Checkout
             </a>
         </div>
-        <button class="wccs-cart-clear-btn" id="wccs-cart-clear-btn">
+        <button class="wccs-cart-clear-btn" id="wccs-cart-clear-btn" style="display:flex;">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
                 <path d="M2 4h12M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v6M10 7v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M3 4l1 9a1 1 0 001 1h6a1 1 0 001-1l1-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
