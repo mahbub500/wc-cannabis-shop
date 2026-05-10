@@ -462,6 +462,10 @@
             },
             error: function () {
                 $varWrap.html( '<p class="wccs-qv-loading-vars">Error loading options.</p>' );
+            
+                setTimeout(function () {
+                    location.reload();
+                }, 1000);
             },
         } );
     }
