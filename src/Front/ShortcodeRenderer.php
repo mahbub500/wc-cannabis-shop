@@ -10,7 +10,6 @@ class ShortcodeRenderer {
     }
 
     public function render(): string {
-
         $query = new ProductQuery( [
             'category'  => $this->atts['category'],
             'strain'    => '',
@@ -20,21 +19,20 @@ class ShortcodeRenderer {
             'sale_only' => false,
             'price'     => '',
         ] );
-
         $products = $query->get_products();
         $total    = $query->get_total();
         $cats     = $this->get_product_categories();
+        $atts     = $this->atts;
 
-        /*
-         * Expose $atts as a plain variable.
-         * $this is NOT accessible inside include() scope — the template
-         * must use $atts['key'], never $this->atts['key'].
-         */
-        $atts = $this->atts;
+        remove_filter( 'the_content', 'wpautop' );
 
         ob_start();
         include WCCS_DIR . 'templates/shop-wrapper.php';
-        return ob_get_clean();
+        $html = ob_get_clean();
+
+        add_filter( 'the_content', 'wpautop' );
+
+        return $html;
     }
 
     private function get_product_categories(): array {
